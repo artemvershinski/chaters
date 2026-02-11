@@ -20,7 +20,7 @@ input, textarea, .message-text, .message-caption, .chat-name, .chat-id-badge, .l
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background: rgb(30, 30, 30);
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     line-height: 1.4;
     font-size: 16px;
     font-weight: 400;
@@ -87,7 +87,7 @@ body {
     font-size: 32px;
     font-weight: 600;
     letter-spacing: -0.5px;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     margin-bottom: 4px;
 }
 
@@ -109,7 +109,7 @@ body {
     font-size: 20px;
     font-weight: 500;
     margin-bottom: 24px;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
 }
 
 /* ===== ИНПУТЫ ===== */
@@ -126,7 +126,7 @@ body {
     border: 1px solid rgb(50, 50, 50);
     border-radius: 16px;
     font-size: 16px;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     transition: all 0.2s ease;
     appearance: none;
 }
@@ -134,7 +134,7 @@ body {
 .input-group input:focus,
 .input-group select:focus {
     outline: none;
-    border-color: rgb(220, 220, 220);
+    border-color: rgb(255, 255, 255);
     background: rgb(45, 45, 45);
 }
 
@@ -173,18 +173,18 @@ body {
 }
 
 .btn-primary {
-    background: rgb(220, 220, 220);
+    background: rgb(255, 255, 255);
     color: rgb(30, 30, 30);
 }
 
 .btn-primary:active {
-    background: rgb(200, 200, 200);
+    background: rgb(240, 240, 240);
     transform: scale(0.98);
 }
 
 .btn-secondary {
     background: rgb(50, 50, 50);
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
 }
 
 .btn-secondary:active {
@@ -201,7 +201,7 @@ body {
 }
 
 .switch-text a {
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     text-decoration: none;
     font-weight: 600;
     margin-left: 6px;
@@ -225,7 +225,7 @@ body {
 .dashboard-header h1 {
     font-size: 28px;
     font-weight: 700;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     letter-spacing: -0.5px;
 }
 
@@ -236,7 +236,7 @@ body {
 }
 
 .user-nickname {
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-weight: 500;
     background: rgb(40, 40, 40);
     padding: 8px 16px;
@@ -254,7 +254,7 @@ body {
 .logout-button {
     background: rgb(40, 40, 40);
     border: 1px solid rgb(50, 50, 50);
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-size: 18px;
     cursor: pointer;
     padding: 8px 12px;
@@ -287,7 +287,7 @@ body {
     background: rgb(40, 40, 40);
     border: 1px solid rgb(50, 50, 50);
     border-radius: 100px;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-size: 15px;
     font-weight: 500;
     cursor: pointer;
@@ -347,7 +347,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 24px;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     flex-shrink: 0;
 }
 
@@ -363,14 +363,19 @@ body {
     margin-bottom: 6px;
 }
 
+/* ===== НАЗВАНИЕ ЧАТА — ЧИСТЫЙ БЕЛЫЙ, БЕЗ ФОНА ===== */
 .chat-name {
     font-size: 17px;
     font-weight: 600;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 70%;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
 }
 
 .chat-time {
@@ -434,7 +439,7 @@ body {
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 8px;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
 }
 
 .empty-state p {
@@ -460,7 +465,7 @@ body {
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-size: 15px;
     display: flex;
     align-items: center;
@@ -507,7 +512,7 @@ body {
 .back-button {
     background: none;
     border: none;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-size: 24px;
     cursor: pointer;
     padding: 8px;
@@ -533,7 +538,7 @@ body {
 .chat-name {
     font-size: 18px;
     font-weight: 600;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
 }
 
 .chat-members-count {
@@ -572,14 +577,14 @@ body {
 .message.own {
     align-self: flex-end;
     background: rgb(50, 50, 50);
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     border-bottom-right-radius: 6px;
 }
 
 .message.other {
     align-self: flex-start;
     background: rgb(40, 40, 40);
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     border-bottom-left-radius: 6px;
 }
 
@@ -615,10 +620,7 @@ body {
     font-size: 15px;
     line-height: 1.4;
     word-break: break-word;
-}
-
-.message.own .message-text {
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
 }
 
 .message-copied {
@@ -651,7 +653,7 @@ body {
 }
 
 .delete-confirm p {
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-size: 16px;
     margin-bottom: 20px;
 }
@@ -674,7 +676,7 @@ body {
 
 .delete-confirm-btn.cancel {
     background: rgb(50, 50, 50);
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
 }
 
 .delete-confirm-btn.delete {
@@ -704,7 +706,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     text-decoration: none;
 }
 
@@ -727,7 +729,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-size: 24px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -752,14 +754,14 @@ body {
 }
 
 .input-wrapper:focus-within {
-    border-color: rgb(220, 220, 220);
+    border-color: rgb(255, 255, 255);
 }
 
 #messageInput {
     flex: 1;
     background: none;
     border: none;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-size: 16px;
     resize: none;
     max-height: 120px;
@@ -780,7 +782,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-size: 20px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -837,7 +839,7 @@ body {
     font-size: 18px;
     font-weight: 500;
     margin-bottom: 8px;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
 }
 
 /* ===== МОДАЛКИ ===== */
@@ -878,7 +880,7 @@ body {
 .modal-header h3 {
     font-size: 18px;
     font-weight: 600;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
 }
 
 .close {
@@ -942,7 +944,7 @@ body {
 .chat-menu-header span:first-child {
     font-size: 20px;
     font-weight: 600;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
 }
 
 .menu-chat-id {
@@ -1004,7 +1006,7 @@ body {
 }
 
 .menu-item-label {
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-weight: 500;
 }
 
@@ -1046,7 +1048,7 @@ body {
 }
 
 .member-name {
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     font-weight: 500;
     font-size: 15px;
 }
@@ -1080,7 +1082,7 @@ body {
     left: 16px;
     right: 16px;
     background: rgb(50, 50, 50);
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
     padding: 14px 20px;
     border-radius: 100px;
     text-align: center;
@@ -1133,7 +1135,7 @@ body {
     width: 48px;
     height: 48px;
     border: 4px solid rgb(50, 50, 50);
-    border-top-color: rgb(220, 220, 220);
+    border-top-color: rgb(255, 255, 255);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -1142,7 +1144,7 @@ body {
     width: 24px;
     height: 24px;
     border: 2px solid rgb(50, 50, 50);
-    border-top-color: rgb(220, 220, 220);
+    border-top-color: rgb(255, 255, 255);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
