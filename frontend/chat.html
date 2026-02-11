@@ -8,99 +8,156 @@
     
     <title>Chaters — чат</title>
     
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 </head>
 <body class="chat-body">
     <div class="chat-container">
-        <div class="chat-header">
-            <div class="chat-header-left">
-                <button class="back-button" onclick="window.location.href='/dashboard.html'" aria-label="Назад">←</button>
-                <div class="chat-info">
-                    <span class="chat-name">Загрузка...</span>
-                    <span class="chat-id">#</span>
+        <!-- Шапка чата — теперь кликабельная -->
+        <div class="chat-header" id="chatHeader">
+            <button class="back-button" aria-label="Назад">←</button>
+            <div class="chat-info">
+                <span class="chat-name" id="chatName">Загрузка...</span>
+                <span class="chat-members-count" id="chatMembersCount">0 участников</span>
+            </div>
+            <div class="chat-header-placeholder"></div>
+        </div>
+
+        <!-- Меню чата (выдвигается снизу) -->
+        <div id="chatMenu" class="chat-menu-overlay hidden">
+            <div class="chat-menu">
+                <div class="chat-menu-header">
+                    <span id="menuChatName">Название чата</span>
+                    <span id="menuChatId" class="menu-chat-id">#чат</span>
+                    <button class="close-menu">×</button>
+                </div>
+
+                <!-- Настройки чата (только для создателя) -->
+                <div id="creatorSettings" class="menu-section hidden">
+                    <div class="menu-section-title">Настройки чата</div>
+                    
+                    <div class="menu-item edit-item" id="editChatNameItem">
+                        <span class="menu-item-label">Название</span>
+                        <span id="currentChatName" class="menu-item-value">Название</span>
+                        <span class="menu-item-action">✎</span>
+                    </div>
+                    
+                    <div class="menu-item edit-item" id="editChatIdItem">
+                        <span class="menu-item-label">ID чата</span>
+                        <span id="currentChatId" class="menu-item-value">#чат</span>
+                        <span class="menu-item-action">✎</span>
+                    </div>
+                </div>
+
+                <!-- Управление чатом -->
+                <div class="menu-section">
+                    <div class="menu-section-title">Управление</div>
+                    
+                    <div id="deleteChatItem" class="menu-item danger hidden">
+                        <span class="menu-item-label">Удалить чат</span>
+                        <span class="menu-item-action">🗑️</span>
+                    </div>
+                    
+                    <div id="leaveChatItem" class="menu-item danger">
+                        <span class="menu-item-label">Выйти из чата</span>
+                        <span class="menu-item-action">🚪</span>
+                    </div>
+                </div>
+
+                <!-- Участники -->
+                <div class="menu-section">
+                    <div class="menu-section-title">
+                        Участники
+                        <span id="membersCountBadge">0</span>
+                    </div>
+                    <div id="membersList" class="members-list"></div>
                 </div>
             </div>
-            <div class="chat-header-right">
-                <button class="menu-button" aria-label="Меню">⋮</button>
+        </div>
+
+        <!-- Редактирование названия -->
+        <div id="editNameModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Изменить название</h3>
+                    <button class="close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <input type="text" id="editChatNameInput" placeholder="Новое название" maxlength="50">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary cancel-btn">Отмена</button>
+                    <button id="saveChatNameBtn" class="btn btn-primary">Сохранить</button>
+                </div>
             </div>
         </div>
 
-        <div id="chatMenu" class="chat-menu hidden">
-            <div class="menu-item" onclick="window.showMembers()">Участники</div>
-            <div class="menu-item" onclick="window.showSettings()">Настройки</div>
-            <div class="menu-item" onclick="window.leaveChat()">Покинуть чат</div>
+        <!-- Редактирование ID -->
+        <div id="editIdModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Изменить ID чата</h3>
+                    <button class="close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <input type="text" id="editChatIdInput" placeholder="#новый-id" maxlength="30">
+                        <small class="hint">Только английские буквы, цифры и точки</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary cancel-btn">Отмена</button>
+                    <button id="saveChatIdBtn" class="btn btn-primary">Сохранить</button>
+                </div>
+            </div>
         </div>
 
-        <div id="typingIndicator" class="typing-indicator hidden"></div>
-
+        <!-- Контейнер сообщений (перевернутый) -->
         <div id="messagesContainer" class="messages-container">
             <div id="messagesLoader" class="messages-loader hidden">
                 <div class="spinner-small"></div>
             </div>
+            <!-- Сообщения будут добавляться СНИЗУ вверх -->
         </div>
 
+        <!-- Индикатор печатания -->
+        <div id="typingIndicator" class="typing-indicator hidden"></div>
+
+        <!-- Пустой чат -->
         <div id="emptyChat" class="empty-chat hidden">
             <span class="empty-icon">💬</span>
             <h3>Нет сообщений</h3>
             <p>Напишите первое сообщение</p>
         </div>
-
         <div class="message-input-container">
             <button id="attachButton" class="attach-button" aria-label="Прикрепить файл">+</button>
-            <div class="input-wrapper">
-                <label for="messageInput" class="visually-hidden">Сообщение</label>
+            <div class="input-wrapper" id="messageInputWrapper">
                 <textarea 
                     id="messageInput" 
                     placeholder="Сообщение" 
                     rows="1"
                     aria-label="Текст сообщения"
                 ></textarea>
-                <button id="voiceButton" class="voice-button" aria-label="Голосовое сообщение">🎤</button>
             </div>
-            <button id="sendButton" class="send-button" aria-label="Отправить">→</button>
+            
+            <!-- Кнопка отправки (обычная) -->
+            <button id="sendButton" class="send-button">→</button>
+            
+            <!-- Кнопка голосового (скрыта по умолчанию) -->
+            <button id="voiceButton" class="voice-button hidden">🎤</button>
         </div>
 
         <input type="file" id="fileInput" class="hidden" accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt" aria-label="Выберите файл">
     </div>
 
+    <!-- Модалка предпросмотра изображения -->
     <div id="imagePreviewModal" class="modal hidden">
-        <div class="modal-content">
+        <div class="modal-content" style="background: none; border: none;">
+            <img id="previewImage" src="" alt="Превью" style="max-width: 100%; max-height: 80vh; border-radius: 12px;">
             <button class="close-modal" aria-label="Закрыть">×</button>
-            <img id="previewImage" src="" alt="Превью изображения">
-        </div>
-    </div>
-
-    <div id="membersModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Участники</h3>
-                <button class="close" aria-label="Закрыть">×</button>
-            </div>
-            <div id="membersList" class="members-list"></div>
-        </div>
-    </div>
-
-    <div id="chatSettingsModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Настройки чата</h3>
-                <button class="close" aria-label="Закрыть">×</button>
-            </div>
-            <div class="settings-content">
-                <div class="setting-item">
-                    <label for="chatMessageTtl">Удалять сообщения через</label>
-                    <select id="chatMessageTtl" name="chatMessageTtl" title="Время удаления сообщений">
-                        <option value="1">1 день</option>
-                        <option value="3">3 дня</option>
-                        <option value="7">7 дней</option>
-                        <option value="30">30 дней</option>
-                        <option value="0">Никогда</option>
-                    </select>
-                </div>
-                <button id="saveChatSettingsBtn" class="btn btn-primary">Сохранить</button>
-            </div>
         </div>
     </div>
 
