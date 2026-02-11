@@ -354,16 +354,19 @@ body {
 .chat-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .chat-header {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 6px;
+    align-items: center;
+    width: 100%;
 }
 
-/* ===== НАЗВАНИЕ ЧАТА — ЧИСТЫЙ БЕЛЫЙ, БЕЗ ФОНА ===== */
+/* ===== НАЗВАНИЕ ЧАТА — СЛЕВА, ВО ВСЮ ШИРИНУ ===== */
 .chat-name {
     font-size: 17px;
     font-weight: 600;
@@ -371,26 +374,27 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 70%;
+    max-width: 85%;  /* БОЛЬШЕ МЕСТА */
     background: none;
     border: none;
     padding: 0;
     margin: 0;
+    text-align: left;
 }
 
 .chat-time {
     font-size: 12px;
     color: rgb(140, 140, 140);
     flex-shrink: 0;
+    margin-left: auto;
 }
 
+/* ===== ID ЧАТА — ПОЛНОСТЬЮ УБРАН ===== */
 .chat-id-badge {
-    font-size: 12px;
-    color: rgb(140, 140, 140);
-    margin-bottom: 4px;
-    font-family: monospace;
+    display: none !important;  /* ХУЙ, А НЕ ID */
 }
 
+/* ===== ПОСЛЕДНЕЕ СООБЩЕНИЕ — СЛЕВА НАПРАВО ===== */
 .last-message {
     font-size: 14px;
     color: rgb(160, 160, 160);
@@ -398,6 +402,8 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    text-align: left;
+    margin-top: 2px;
 }
 
 .last-message-sender {
