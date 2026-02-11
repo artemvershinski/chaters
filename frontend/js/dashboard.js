@@ -1,27 +1,10 @@
-console.log('dashboard.js загрузился!');
-console.log('API есть?', typeof API !== 'undefined' ? '✅ ДА' : '❌ НЕТ');
-
-// И В КАЖДУЮ КНОПКУ:
-document.getElementById('createChatBtn')?.addEventListener('click', () => {
-    console.log('НАЖАТА КНОПКА: создать чат');
-    // ВРЕМЕННО — просто покажи alert
-    alert('Кнопка работает!');
-});
-
-document.getElementById('joinChatBtn')?.addEventListener('click', () => {
-    console.log('НАЖАТА КНОПКА: присоединиться');
-    alert('Кнопка работает!');
-});
-
-document.getElementById('logoutBtn')?.addEventListener('click', () => {
-    console.log('НАЖАТА КНОПКА: выход');
-});
-
+console.log('🔥 dashboard.js загрузился');
 
 let userChats = [];
 let currentUser = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('📱 DOM готов');
     await loadUserProfile();
     await loadChats();
     initEventListeners();
@@ -32,16 +15,21 @@ async function loadUserProfile() {
     try {
         currentUser = await API.users.getProfile();
         document.getElementById('userNickname').textContent = currentUser.nickname;
+        console.log('👤 Пользователь:', currentUser.nickname);
     } catch (error) {
+        console.log('❌ Не авторизован');
         window.location.href = '/';
     }
 }
 
 async function loadChats() {
     try {
+        console.log('🔄 Загрузка чатов...');
         userChats = await API.chats.getAll();
         renderChats();
+        console.log('✅ Чатов загружено:', userChats.length);
     } catch (error) {
+        console.error('❌ Ошибка загрузки чатов:', error);
         API.showToast('Ошибка загрузки чатов', 'error');
     }
 }
@@ -52,11 +40,11 @@ function renderChats() {
     
     if (!userChats || userChats.length === 0) {
         container.innerHTML = '';
-        emptyState.classList.remove('hidden');
+        emptyState?.classList.remove('hidden');
         return;
     }
     
-    emptyState.classList.add('hidden');
+    emptyState?.classList.add('hidden');
     
     container.innerHTML = userChats.map(chat => {
         const lastMessage = chat.last_message ? `
@@ -94,64 +82,153 @@ function attachChatListeners() {
     document.querySelectorAll('.chat-item').forEach(item => {
         item.addEventListener('click', () => {
             const chatId = item.dataset.chatId;
+            console.log('💬 Открыть чат:', chatId);
             window.location.href = `/chat.html?id=${encodeURIComponent(chatId)}`;
         });
     });
 }
 
 function initEventListeners() {
-    document.getElementById('createChatBtn').addEventListener('click', showCreateChatModal);
-    document.getElementById('joinChatBtn').addEventListener('click', showJoinChatModal);
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    console.log('🔌 Инициализация обработчиков');
     
-    document.getElementById('createChatSubmit').addEventListener('click', handleCreateChat);
-    document.getElementById('joinChatSubmit').addEventListener('click', handleJoinChat);
+    const createBtn = document.getElementById('createChatBtn');
+    const joinBtn = document.getElementById('joinChatBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    if (createBtn) {
+        createBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🟢 Нажато: создать чат');
+            showCreateChatModal();
+            return false;
+        };
+        console.log('✅ createChatBtn обработчик установлен');
+    } else {
+        console.error('❌ createChatBtn не найден!');
+    }
+    
+    if (joinBtn) {
+        joinBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🟡 Нажато: присоединиться');
+            showJoinChatModal();
+            return false;
+        };
+        console.log('✅ joinChatBtn обработчик установлен');
+    } else {
+        console.error('❌ joinChatBtn не найден!');
+    }
+    
+    if (logoutBtn) {
+        logoutBtn.onclick = function(e) {
+            e.preventDefault();
+            console.log('🔴 Нажато: выход');
+            handleLogout();
+        };
+    }
+    
+    const createSubmit = document.getElementById('createChatSubmit');
+    if (createSubmit) {
+        createSubmit.onclick = function(e) {
+            e.preventDefault();
+            console.log('✅ Нажато: подтвердить создание');
+            handleCreateChat();
+        };
+    }
+    
+    const joinSubmit = document.getElementById('joinChatSubmit');
+    if (joinSubmit) {
+        joinSubmit.onclick = function(e) {
+            e.preventDefault();
+            console.log('✅ Нажато: подтвердить присоединение');
+            handleJoinChat();
+        };
+    }
     
     document.querySelectorAll('.modal .close, .modal .cancel-btn').forEach(btn => {
-        btn.addEventListener('click', closeModals);
+        btn.onclick = function(e) {
+            e.preventDefault();
+            console.log('❌ Закрыть модалку');
+            closeModals();
+        };
     });
     
-    window.addEventListener('click', (e) => {
+    window.onclick = (e) => {
         if (e.target.classList.contains('modal')) {
+            console.log('❌ Клик по оверлею');
             closeModals();
         }
-    });
+    };
     
-    document.getElementById('createChatId').addEventListener('input', (e) => {
-        let value = e.target.value;
-        if (value && !value.startsWith('#')) {
-            e.target.value = '#' + value.replace(/[^a-zA-Z0-9.]/g, '');
-        } else {
-            e.target.value = '#' + value.slice(1).replace(/[^a-zA-Z0-9.]/g, '');
-        }
-    });
+    const createChatId = document.getElementById('createChatId');
+    if (createChatId) {
+        createChatId.oninput = function(e) {
+            let value = e.target.value;
+            if (value && !value.startsWith('#')) {
+                e.target.value = '#' + value.replace(/[^a-zA-Z0-9.]/g, '');
+            } else if (value) {
+                e.target.value = '#' + value.slice(1).replace(/[^a-zA-Z0-9.]/g, '');
+            }
+        };
+    }
     
-    document.getElementById('joinChatId').addEventListener('input', (e) => {
-        let value = e.target.value;
-        if (value && !value.startsWith('#')) {
-            e.target.value = '#' + value.replace(/[^a-zA-Z0-9.]/g, '');
-        } else {
-            e.target.value = '#' + value.slice(1).replace(/[^a-zA-Z0-9.]/g, '');
-        }
-    });
+    const joinChatId = document.getElementById('joinChatId');
+    if (joinChatId) {
+        joinChatId.oninput = function(e) {
+            let value = e.target.value;
+            if (value && !value.startsWith('#')) {
+                e.target.value = '#' + value.replace(/[^a-zA-Z0-9.]/g, '');
+            } else if (value) {
+                e.target.value = '#' + value.slice(1).replace(/[^a-zA-Z0-9.]/g, '');
+            }
+        };
+    }
 }
 
 function showCreateChatModal() {
-    document.getElementById('createChatModal').classList.add('active');
-    document.getElementById('createChatId').value = '#';
-    document.getElementById('createChatName').value = '';
+    console.log('📱 ОТКРЫТИЕ МОДАЛКИ: создать чат');
+    const modal = document.getElementById('createChatModal');
+    if (modal) {
+        modal.classList.add('active');
+        console.log('✅ Модалка открыта, класс active добавлен');
+        
+        const input = document.getElementById('createChatId');
+        if (input) {
+            input.value = '#';
+            input.focus();
+        }
+        document.getElementById('createChatName').value = '';
+    } else {
+        console.error('❌ Модалка createChatModal не найдена!');
+    }
 }
 
 function showJoinChatModal() {
-    document.getElementById('joinChatModal').classList.add('active');
-    document.getElementById('joinChatId').value = '#';
+    console.log('📱 ОТКРЫТИЕ МОДАЛКИ: присоединиться');
+    const modal = document.getElementById('joinChatModal');
+    if (modal) {
+        modal.classList.add('active');
+        console.log('✅ Модалка открыта, класс active добавлен');
+        
+        const input = document.getElementById('joinChatId');
+        if (input) {
+            input.value = '#';
+            input.focus();
+        }
+    } else {
+        console.error('❌ Модалка joinChatModal не найдена!');
+    }
 }
 
 async function handleCreateChat() {
     const chatId = document.getElementById('createChatId').value.trim();
     const chatName = document.getElementById('createChatName').value.trim();
-    const ttl = parseInt(document.getElementById('messageTtl').value);
+    const ttl = document.getElementById('messageTtl')?.value || 1;
     const button = document.getElementById('createChatSubmit');
+    
+    console.log('📝 Создание чата:', { chatId, chatName, ttl });
     
     if (!chatId || chatId === '#') {
         API.showToast('Введите ID чата', 'error');
@@ -173,10 +250,14 @@ async function handleCreateChat() {
             messageTtl: ttl
         });
         
+        console.log('✅ Чат создан успешно');
         closeModals();
         API.showToast('Чат создан!', 'success');
         await loadChats();
     } catch (error) {
+        console.error('❌ Ошибка создания чата:', error);
+        API.showToast(error.message || 'Ошибка создания', 'error');
+    } finally {
         button.disabled = false;
         button.textContent = 'Создать';
     }
@@ -185,6 +266,8 @@ async function handleCreateChat() {
 async function handleJoinChat() {
     const chatId = document.getElementById('joinChatId').value.trim();
     const button = document.getElementById('joinChatSubmit');
+    
+    console.log('📝 Присоединение к чату:', chatId);
     
     if (!chatId || chatId === '#') {
         API.showToast('Введите ID чата', 'error');
@@ -196,10 +279,14 @@ async function handleJoinChat() {
     
     try {
         await API.chats.join(chatId);
+        console.log('✅ Присоединились успешно');
         closeModals();
         API.showToast('Вы присоединились к чату!', 'success');
         await loadChats();
     } catch (error) {
+        console.error('❌ Ошибка присоединения:', error);
+        API.showToast(error.message || 'Ошибка присоединения', 'error');
+    } finally {
         button.disabled = false;
         button.textContent = 'Присоединиться';
     }
@@ -215,6 +302,7 @@ async function handleLogout() {
 }
 
 function closeModals() {
+    console.log('❌ Закрытие всех модалок');
     document.querySelectorAll('.modal').forEach(modal => {
         modal.classList.remove('active');
     });
@@ -228,6 +316,8 @@ function initPullToRefresh() {
     let startY = 0;
     const container = document.querySelector('.dashboard-container');
     
+    if (!container) return;
+    
     container.addEventListener('touchstart', (e) => {
         if (container.scrollTop === 0) {
             startY = e.touches[0].clientY;
@@ -237,15 +327,15 @@ function initPullToRefresh() {
     container.addEventListener('touchmove', async (e) => {
         const y = e.touches[0].clientY;
         if (container.scrollTop === 0 && y - startY > 50) {
-            document.querySelector('.pull-to-refresh').classList.add('active');
+            document.querySelector('.pull-to-refresh')?.classList.add('active');
         }
     });
     
     container.addEventListener('touchend', async (e) => {
-        if (document.querySelector('.pull-to-refresh').classList.contains('active')) {
-            document.querySelector('.pull-to-refresh').classList.add('loading');
+        if (document.querySelector('.pull-to-refresh')?.classList.contains('active')) {
+            document.querySelector('.pull-to-refresh')?.classList.add('loading');
             await loadChats();
-            document.querySelector('.pull-to-refresh').classList.remove('active', 'loading');
+            document.querySelector('.pull-to-refresh')?.classList.remove('active', 'loading');
         }
     });
 }
@@ -274,3 +364,7 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+window.showCreateChatModal = showCreateChatModal;
+window.showJoinChatModal = showJoinChatModal;
+window.closeModals = closeModals;
