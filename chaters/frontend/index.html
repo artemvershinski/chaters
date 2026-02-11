@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Chaters — вход</title>
+    
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>💬</text></svg>">
+</head>
+<body class="auth-body">
+    <div class="container auth-container">
+        <div class="logo">
+            <span class="logo-icon">💬</span>
+            <h1>chaters</h1>
+            <p class="subtitle">Приватный мессенджер</p>
+        </div>
+
+        <!-- Форма входа (активна по умолчанию) -->
+        <div id="loginForm" class="auth-form active">
+            <h2>вход</h2>
+            
+            <div class="input-group">
+                <input type="email" id="loginEmail" placeholder="почта" autocomplete="email">
+                <span class="input-icon"></span>
+            </div>
+            
+            <div class="input-group">
+                <input type="password" id="loginPassword" placeholder="пароль" autocomplete="current-password">
+                <span class="input-icon"></span>
+            </div>
+            
+            <button id="loginButton" class="btn btn-primary">
+                <span>войти</span>
+            </button>
+            
+            <p class="switch-text">
+                еще нет аккаунта? 
+                <a href="#" id="showRegister">создать</a>
+            </p>
+        </div>
+
+        <!-- Форма регистрации (скрыта) -->
+        <div id="registerForm" class="auth-form">
+            <h2>регистрация</h2>
+            
+            <div class="input-group">
+                <input type="email" id="regEmail" placeholder="почта" autocomplete="email">
+                <span class="input-icon"></span>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="regNickname" placeholder="ник (до 20 символов)" maxlength="20" autocomplete="nickname">
+                <span class="input-icon">👤</span>
+                <small class="counter">0/20</small>
+            </div>
+            
+            <div class="input-group">
+                <input type="password" id="regPassword" placeholder="пароль" autocomplete="new-password">
+                <span class="input-icon"></span>
+            </div>
+            
+            <div class="input-group">
+                <input type="password" id="regConfirmPassword" placeholder="повтори пароль" autocomplete="new-password">
+                <span class="input-icon">✓</span>
+            </div>
+            
+            <button id="registerButton" class="btn btn-primary">
+                <span>зарегистрироваться</span>
+            </button>
+            
+            <p class="switch-text">
+                уже есть аккаунт? 
+                <a href="#" id="showLogin">войти</a>
+            </p>
+        </div>
+
+        <!-- Уведомления -->
+        <div id="toast" class="toast hidden"></div>
+    </div>
+
+    <!-- Загрузчик -->
+    <div id="loader" class="loader hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+</body>
+</html>

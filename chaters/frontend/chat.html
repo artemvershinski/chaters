@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Chaters — чат</title>
+    
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+</head>
+<body class="chat-body">
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-header-left">
+                <button class="back-button" onclick="window.location.href='/dashboard.html'" aria-label="Назад">←</button>
+                <div class="chat-info">
+                    <span class="chat-name">Загрузка...</span>
+                    <span class="chat-id">#</span>
+                </div>
+            </div>
+            <div class="chat-header-right">
+                <button class="menu-button" aria-label="Меню">⋮</button>
+            </div>
+        </div>
+
+        <div id="chatMenu" class="chat-menu hidden">
+            <div class="menu-item" onclick="window.showMembers()">Участники</div>
+            <div class="menu-item" onclick="window.showSettings()">Настройки</div>
+            <div class="menu-item" onclick="window.leaveChat()">Покинуть чат</div>
+        </div>
+
+        <div id="typingIndicator" class="typing-indicator hidden"></div>
+
+        <div id="messagesContainer" class="messages-container">
+            <div id="messagesLoader" class="messages-loader hidden">
+                <div class="spinner-small"></div>
+            </div>
+        </div>
+
+        <div id="emptyChat" class="empty-chat hidden">
+            <span class="empty-icon">💬</span>
+            <h3>Нет сообщений</h3>
+            <p>Напишите первое сообщение</p>
+        </div>
+
+        <div class="message-input-container">
+            <button id="attachButton" class="attach-button" aria-label="Прикрепить файл">+</button>
+            <div class="input-wrapper">
+                <label for="messageInput" class="visually-hidden">Сообщение</label>
+                <textarea 
+                    id="messageInput" 
+                    placeholder="Сообщение" 
+                    rows="1"
+                    aria-label="Текст сообщения"
+                ></textarea>
+                <button id="voiceButton" class="voice-button" aria-label="Голосовое сообщение">🎤</button>
+            </div>
+            <button id="sendButton" class="send-button" aria-label="Отправить">→</button>
+        </div>
+
+        <input type="file" id="fileInput" class="hidden" accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt" aria-label="Выберите файл">
+    </div>
+
+    <div id="imagePreviewModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-modal" aria-label="Закрыть">×</button>
+            <img id="previewImage" src="" alt="Превью изображения">
+        </div>
+    </div>
+
+    <div id="membersModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Участники</h3>
+                <button class="close" aria-label="Закрыть">×</button>
+            </div>
+            <div id="membersList" class="members-list"></div>
+        </div>
+    </div>
+
+    <div id="chatSettingsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Настройки чата</h3>
+                <button class="close" aria-label="Закрыть">×</button>
+            </div>
+            <div class="settings-content">
+                <div class="setting-item">
+                    <label for="chatMessageTtl">Удалять сообщения через</label>
+                    <select id="chatMessageTtl" name="chatMessageTtl" title="Время удаления сообщений">
+                        <option value="1">1 день</option>
+                        <option value="3">3 дня</option>
+                        <option value="7">7 дней</option>
+                        <option value="30">30 дней</option>
+                        <option value="0">Никогда</option>
+                    </select>
+                </div>
+                <button id="saveChatSettingsBtn" class="btn btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/chat.js"></script>
+</body>
+</html>
