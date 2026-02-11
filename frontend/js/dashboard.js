@@ -39,7 +39,7 @@ async function loadChats() {
     }
 }
 
-// ===== ОТОБРАЖЕНИЕ ЧАТОВ =====
+// ===== ОТОБРАЖЕНИЕ ЧАТОВ (TG СТИЛЬ) =====
 function renderChats() {
     const container = document.getElementById('chatsList');
     const emptyState = document.getElementById('emptyState');
@@ -65,15 +65,20 @@ function renderChats() {
         const unreadBadge = chat.unread_count > 0 ? 
             `<span class="unread-badge">${chat.unread_count}</span>` : '';
         
+        const time = chat.last_message?.sent_at ? formatTime(chat.last_message.sent_at) : '';
+        
         return `
-            <div class="chat-item" data-chat-id="${chat.chat_id}" data-chat-name="${chat.name}" data-created-by="${chat.created_by}">
+            <div class="chat-item" 
+                 data-chat-id="${escapeHtml(chat.chat_id)}" 
+                 data-chat-name="${escapeHtml(chat.name)}" 
+                 data-created-by="${chat.created_by}">
                 <div class="chat-avatar">
                     <span>💬</span>
                 </div>
                 <div class="chat-info">
                     <div class="chat-header">
                         <span class="chat-name">${escapeHtml(chat.name)}</span>
-                        <span class="chat-time">${formatTime(chat.last_message?.sent_at)}</span>
+                        <span class="chat-time">${time}</span>
                     </div>
                     <div class="chat-id-badge">${escapeHtml(chat.chat_id)}</div>
                     ${lastMessage}
@@ -90,9 +95,7 @@ function renderChats() {
 function attachChatListeners() {
     document.querySelectorAll('.chat-item').forEach(item => {
         item.addEventListener('click', (e) => {
-            // Не открываем чат при долгом нажатии
             if (e.defaultPrevented) return;
-            
             const chatId = item.dataset.chatId;
             console.log('💬 Открыть чат:', chatId);
             window.location.href = `/chat.html?id=${encodeURIComponent(chatId)}`;
@@ -105,84 +108,60 @@ function initChatLongPress() {
     let pressTimer;
     let pressedItem = null;
     
-    document.addEventListener('touchstart', (e) => {
+    const startPress = (e, isTouch = false) => {
         const chatItem = e.target.closest('.chat-item');
         if (!chatItem) return;
+        
+        if (isTouch) {
+            e.preventDefault();
+        }
         
         pressedItem = chatItem;
         
         pressTimer = setTimeout(() => {
             if (pressedItem) {
-                e.preventDefault();
                 const chatId = pressedItem.dataset.chatId;
                 const chatName = pressedItem.dataset.chatName;
                 const createdBy = parseInt(pressedItem.dataset.createdBy);
-                showChatContextMenu(chatId, chatName, createdBy, e);
+                
+                let x, y;
+                if (isTouch && e.touches) {
+                    x = e.touches[0].clientX;
+                    y = e.touches[0].clientY;
+                } else {
+                    x = e.clientX;
+                    y = e.clientY;
+                }
+                
+                showChatContextMenu(chatId, chatName, createdBy, x, y);
             }
         }, 500);
-    });
+    };
     
-    document.addEventListener('touchend', () => {
+    const endPress = () => {
         clearTimeout(pressTimer);
         pressedItem = null;
-    });
+    };
     
-    document.addEventListener('touchmove', () => {
-        clearTimeout(pressTimer);
-        pressedItem = null;
-    });
+    document.addEventListener('touchstart', (e) => startPress(e, true));
+    document.addEventListener('touchend', endPress);
+    document.addEventListener('touchmove', endPress);
+    document.addEventListener('touchcancel', endPress);
     
-    // Для мыши (для тестирования на компе)
-    document.addEventListener('mousedown', (e) => {
-        const chatItem = e.target.closest('.chat-item');
-        if (!chatItem) return;
-        
-        pressedItem = chatItem;
-        
-        pressTimer = setTimeout(() => {
-            if (pressedItem) {
-                e.preventDefault();
-                const chatId = pressedItem.dataset.chatId;
-                const chatName = pressedItem.dataset.chatName;
-                const createdBy = parseInt(pressedItem.dataset.createdBy);
-                showChatContextMenu(chatId, chatName, createdBy, e);
-            }
-        }, 500);
-    });
-    
-    document.addEventListener('mouseup', () => {
-        clearTimeout(pressTimer);
-        pressedItem = null;
-    });
-    
-    document.addEventListener('mousemove', () => {
-        clearTimeout(pressTimer);
-        pressedItem = null;
-    });
+    document.addEventListener('mousedown', (e) => startPress(e, false));
+    document.addEventListener('mouseup', endPress);
+    document.addEventListener('mousemove', endPress);
 }
 
-// ===== ПОКАЗ КОНТЕКСТНОГО МЕНЮ =====
-function showChatContextMenu(chatId, chatName, createdBy, e) {
-    // Удаляем старое меню
+// ===== КОНТЕКСТНОЕ МЕНЮ ЧАТА =====
+function showChatContextMenu(chatId, chatName, createdBy, x, y) {
     document.querySelector('.chat-context-menu')?.remove();
     
-    // Определяем позицию
-    let x, y;
-    if (e.touches) {
-        x = e.touches[0].clientX;
-        y = e.touches[0].clientY;
-    } else {
-        x = e.clientX;
-        y = e.clientY;
-    }
-    
-    // Создаем меню
     const menu = document.createElement('div');
     menu.className = 'chat-context-menu';
     menu.style.top = `${y}px`;
     menu.style.left = `${x}px`;
     
-    // Проверяем, создатель ли я
     const isCreator = currentUser?.id === createdBy;
     
     let menuItems = '';
@@ -195,15 +174,14 @@ function showChatContextMenu(chatId, chatName, createdBy, e) {
     menu.innerHTML = menuItems;
     document.body.appendChild(menu);
     
-    // Закрытие по клику вне
     setTimeout(() => {
-        function closeMenu(e) {
+        const closeMenu = (e) => {
             if (!e.target.closest('.chat-context-menu')) {
                 menu.remove();
                 document.removeEventListener('click', closeMenu);
                 document.removeEventListener('touchstart', closeMenu);
             }
-        }
+        };
         document.addEventListener('click', closeMenu);
         document.addEventListener('touchstart', closeMenu);
     }, 100);
@@ -216,7 +194,7 @@ window.leaveChat = async function(chatId) {
     try {
         await API.chats.leave(chatId);
         await loadChats();
-        API.showToast('Вы покинули чат', 'success');
+        API.showCheckToast('Вы покинули чат');
     } catch (error) {
         console.error('❌ Ошибка выхода:', error);
         API.showToast('Ошибка выхода из чата', 'error');
@@ -232,7 +210,7 @@ window.deleteChat = async function(chatId) {
     try {
         await API.chats.delete(chatId);
         await loadChats();
-        API.showToast('Чат удален', 'success');
+        API.showCheckToast('Чат удален');
     } catch (error) {
         console.error('❌ Ошибка удаления:', error);
         API.showToast('Ошибка удаления чата', 'error');
@@ -246,10 +224,10 @@ function initEventListeners() {
     const createBtn = document.getElementById('createChatBtn');
     const joinBtn = document.getElementById('joinChatBtn');
     const logoutBtn = document.getElementById('logoutBtn');
-    const nicknameBtn = document.getElementById('userNickname');
+    const nicknameEl = document.getElementById('userNickname');
     
     if (createBtn) {
-        createBtn.onclick = function(e) {
+        createBtn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
             console.log('🟢 Нажато: создать чат');
@@ -259,7 +237,7 @@ function initEventListeners() {
     }
     
     if (joinBtn) {
-        joinBtn.onclick = function(e) {
+        joinBtn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
             console.log('🟡 Нажато: присоединиться');
@@ -269,23 +247,22 @@ function initEventListeners() {
     }
     
     if (logoutBtn) {
-        logoutBtn.onclick = function(e) {
+        logoutBtn.onclick = (e) => {
             e.preventDefault();
             console.log('🔴 Нажато: выход');
             handleLogout();
         };
     }
     
-    if (nicknameBtn) {
-        nicknameBtn.onclick = function() {
+    if (nicknameEl) {
+        nicknameEl.onclick = () => {
             showNicknameModal();
         };
     }
     
-    // Кнопки модалок
     const createSubmit = document.getElementById('createChatSubmit');
     if (createSubmit) {
-        createSubmit.onclick = function(e) {
+        createSubmit.onclick = (e) => {
             e.preventDefault();
             handleCreateChat();
         };
@@ -293,7 +270,7 @@ function initEventListeners() {
     
     const joinSubmit = document.getElementById('joinChatSubmit');
     if (joinSubmit) {
-        joinSubmit.onclick = function(e) {
+        joinSubmit.onclick = (e) => {
             e.preventDefault();
             handleJoinChat();
         };
@@ -301,34 +278,35 @@ function initEventListeners() {
     
     const updateNicknameBtn = document.getElementById('updateNicknameBtn');
     if (updateNicknameBtn) {
-        updateNicknameBtn.onclick = function(e) {
+        updateNicknameBtn.onclick = (e) => {
             e.preventDefault();
             handleUpdateNickname();
         };
     }
     
-    // Закрытие модалок
     document.querySelectorAll('.modal .close, .modal .cancel-btn').forEach(btn => {
-        btn.onclick = function(e) {
+        btn.onclick = (e) => {
             e.preventDefault();
             closeModals();
         };
     });
     
-    // Закрытие по клику на оверлей
     window.onclick = (e) => {
         if (e.target.classList.contains('modal')) {
             closeModals();
         }
     };
     
-    // Валидация ID чата
     const createChatId = document.getElementById('createChatId');
     if (createChatId) {
         createChatId.oninput = function(e) {
             let value = e.target.value;
+            value = value.replace(/[^a-zA-Z0-9.#]/g, '');
+            
             if (value && !value.startsWith('#')) {
-                e.target.value = '#' + value.replace(/[^a-zA-Z0-9.]/g, '');
+                e.target.value = '#' + value.replace(/#/g, '');
+            } else if (value === '#') {
+                e.target.value = '#';
             } else if (value) {
                 e.target.value = '#' + value.slice(1).replace(/[^a-zA-Z0-9.]/g, '');
             }
@@ -339,20 +317,27 @@ function initEventListeners() {
     if (joinChatId) {
         joinChatId.oninput = function(e) {
             let value = e.target.value;
+            value = value.replace(/[^a-zA-Z0-9.#]/g, '');
+            
             if (value && !value.startsWith('#')) {
-                e.target.value = '#' + value.replace(/[^a-zA-Z0-9.]/g, '');
+                e.target.value = '#' + value.replace(/#/g, '');
+            } else if (value === '#') {
+                e.target.value = '#';
             } else if (value) {
                 e.target.value = '#' + value.slice(1).replace(/[^a-zA-Z0-9.]/g, '');
             }
         };
     }
     
-    // Счетчик ника
     const nicknameInput = document.getElementById('newNickname');
     const counter = document.querySelector('.counter');
     
     if (nicknameInput && counter) {
         nicknameInput.oninput = function() {
+            let value = this.value;
+            value = value.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s._-]/g, '');
+            this.value = value.slice(0, 20);
+            
             const length = this.value.length;
             counter.textContent = `${length}/20`;
             counter.style.color = length > 18 ? '#FF8888' : '#A9A9A9';
@@ -369,10 +354,11 @@ function showCreateChatModal() {
         const input = document.getElementById('createChatId');
         if (input) {
             input.value = '#';
-            input.focus();
+            setTimeout(() => input.focus(), 100);
         }
         document.getElementById('createChatName').value = '';
-        document.getElementById('messageTtl').value = '1';
+        const ttlSelect = document.getElementById('messageTtl');
+        if (ttlSelect) ttlSelect.value = '1';
     }
 }
 
@@ -384,7 +370,7 @@ function showJoinChatModal() {
         const input = document.getElementById('joinChatId');
         if (input) {
             input.value = '#';
-            input.focus();
+            setTimeout(() => input.focus(), 100);
         }
     }
 }
@@ -393,16 +379,21 @@ function showNicknameModal() {
     console.log('📱 Открытие: смена ника');
     const modal = document.getElementById('nicknameModal');
     const input = document.getElementById('newNickname');
+    const counter = document.querySelector('.counter');
+    
     if (modal && input) {
         input.value = currentUser?.nickname || '';
+        if (counter) {
+            counter.textContent = `${input.value.length}/20`;
+        }
         modal.classList.add('active');
-        input.focus();
+        setTimeout(() => input.focus(), 100);
     }
 }
 
 // ===== СОЗДАНИЕ ЧАТА =====
 async function handleCreateChat() {
-    const chatId = document.getElementById('createChatId').value.trim();
+    let chatId = document.getElementById('createChatId').value.trim();
     const chatName = document.getElementById('createChatName').value.trim();
     const ttl = document.getElementById('messageTtl')?.value || 1;
     const button = document.getElementById('createChatSubmit');
@@ -411,6 +402,16 @@ async function handleCreateChat() {
     
     if (!chatId || chatId === '#') {
         API.showToast('Введите ID чата', 'error');
+        return;
+    }
+    
+    if (chatId.startsWith('##')) {
+        chatId = '#' + chatId.slice(2);
+    }
+    
+    const chatIdRegex = /^#[a-zA-Z0-9.]+$/;
+    if (!chatIdRegex.test(chatId)) {
+        API.showToast('Только английские буквы, цифры и точки после #', 'error');
         return;
     }
     
@@ -424,14 +425,14 @@ async function handleCreateChat() {
     
     try {
         await API.chats.create({
-            chatId,
+            chatId: chatId,
             name: chatName,
             messageTtl: parseInt(ttl)
         });
         
         console.log('✅ Чат создан');
         closeModals();
-        API.showToast('Чат создан!', 'success');
+        API.showCheckToast('Чат создан!');
         await loadChats();
     } catch (error) {
         console.error('❌ Ошибка:', error);
@@ -444,7 +445,7 @@ async function handleCreateChat() {
 
 // ===== ПРИСОЕДИНЕНИЕ =====
 async function handleJoinChat() {
-    const chatId = document.getElementById('joinChatId').value.trim();
+    let chatId = document.getElementById('joinChatId').value.trim();
     const button = document.getElementById('joinChatSubmit');
     
     console.log('📝 Присоединение к чату:', chatId);
@@ -454,6 +455,12 @@ async function handleJoinChat() {
         return;
     }
     
+    if (!chatId.startsWith('#')) {
+        chatId = '#' + chatId;
+    } else if (chatId.startsWith('##')) {
+        chatId = '#' + chatId.slice(2);
+    }
+    
     button.disabled = true;
     button.textContent = '⏳';
     
@@ -461,7 +468,7 @@ async function handleJoinChat() {
         await API.chats.join(chatId);
         console.log('✅ Присоединились');
         closeModals();
-        API.showToast('Вы присоединились к чату!', 'success');
+        API.showCheckToast('Вы присоединились к чату!');
         await loadChats();
     } catch (error) {
         console.error('❌ Ошибка:', error);
@@ -487,6 +494,11 @@ async function handleUpdateNickname() {
         return;
     }
     
+    if (nickname.length < 2) {
+        API.showToast('Минимум 2 символа', 'error');
+        return;
+    }
+    
     button.disabled = true;
     button.textContent = '⏳';
     
@@ -495,7 +507,7 @@ async function handleUpdateNickname() {
         currentUser.nickname = nickname;
         document.getElementById('userNickname').textContent = nickname;
         closeModals();
-        API.showToast('Ник изменен', 'success');
+        API.showCheckToast('Ник изменен');
     } catch (error) {
         console.error('❌ Ошибка:', error);
         API.showToast('Ошибка смены ника', 'error');
@@ -525,6 +537,12 @@ function closeModals() {
     document.querySelectorAll('.modal input').forEach(input => {
         input.value = '';
     });
+    
+    const counter = document.querySelector('.counter');
+    if (counter) {
+        counter.textContent = '0/20';
+        counter.style.color = '#A9A9A9';
+    }
 }
 
 // ===== ФОРМАТ ВРЕМЕНИ =====
@@ -554,28 +572,9 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// ===== API МЕТОДЫ (если отсутствуют) =====
-if (!API.chats.leave) {
-    API.chats.leave = async (chatId) => {
-        return API.request(`/api/chats/${chatId}/leave`, {
-            method: 'POST'
-        });
-    };
-}
-
-if (!API.chats.delete) {
-    API.chats.delete = async (chatId) => {
-        return API.request(`/api/chats/${chatId}`, {
-            method: 'DELETE'
-        });
-    };
-}
-
-if (!API.users.updateNickname) {
-    API.users.updateNickname = async (nickname) => {
-        return API.request('/api/user/nickname', {
-            method: 'PUT',
-            body: JSON.stringify({ nickname })
-        });
-    };
-}
+// ===== ГЛОБАЛЬНЫЕ ФУНКЦИИ =====
+window.showCreateChatModal = showCreateChatModal;
+window.showJoinChatModal = showJoinChatModal;
+window.closeModals = closeModals;
+window.leaveChat = leaveChat;
+window.deleteChat = deleteChat;
