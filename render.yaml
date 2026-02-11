@@ -1,7 +1,6 @@
 services:
   - type: web
     name: chaters
-    rootDir: backend
     env: node
     region: frankfurt
     plan: free
