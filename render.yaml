@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: chaters
+    env: node
+    region: frankfurt
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: chaters-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        value: https://chaters.onrender.com
+      - key: MAX_FILE_SIZE
+        value: 10485760
+
+databases:
+  - name: chaters-db
+    region: frankfurt
+    plan: free
+    databaseName: chaters
+    ipAllowList: []
