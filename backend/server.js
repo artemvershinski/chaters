@@ -29,18 +29,21 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
+// ✅ СТАТИКА — frontend папка
+app.use(express.static(path.join(__dirname, '../frontend')));
+
 const uploadsDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 app.use('/uploads', express.static(uploadsDir));
 
-app.use(express.static(path.join(__dirname, '../frontend')));
-
+// ✅ API маршруты
 app.use('/api', authRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', messageRoutes);
 
+// ✅ Пинг
 app.get('/ping', (req, res) => {
     res.status(200).json({ 
         status: 'alive', 
@@ -66,11 +69,20 @@ app.get('/health', async (req, res) => {
     }
 });
 
-app.get('*', (req, res) => {
+// ✅ ЯВНОЕ УКАЗАНИЕ СТРАНИЦ
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// ========== АВТОСОЗДАНИЕ ТАБЛИЦ ==========
+app.get('/dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dashboard.html'));
+});
+
+app.get('/chat.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/chat.html'));
+});
+
+// ===== АВТОСОЗДАНИЕ ТАБЛИЦ =====
 async function initTables() {
     try {
         console.log('🔄 Проверка/создание таблиц...');
@@ -133,11 +145,10 @@ async function initTables() {
         console.log('✅ Таблицы готовы');
     } catch (err) {
         console.error('❌ Ошибка инициализации БД:', err.message);
-        throw err;
     }
 }
 
-// ========== ЗАПУСК СЕРВЕРА ==========
+// ===== ЗАПУСК =====
 initTables().then(() => {
     const server = app.listen(PORT, () => {
         console.log(`🚀 Chaters server running on port ${PORT}`);
@@ -159,14 +170,6 @@ initTables().then(() => {
 }).catch(err => {
     console.error('💥 Фатальная ошибка:', err);
     process.exit(1);
-});
-
-process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err);
-});
-
-process.on('unhandledRejection', (err) => {
-    console.error('Unhandled Rejection:', err);
 });
 
 module.exports = app;
