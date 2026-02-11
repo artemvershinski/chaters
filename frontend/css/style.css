@@ -24,6 +24,50 @@ body {
     display: flex;
     flex-direction: column;
     background: #000;
+    transition: opacity 0.2s ease;
+}
+
+/* ===== АНИМАЦИИ ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(-20px); opacity: 0; }
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* ===== ПЛАВНЫЕ ПЕРЕХОДЫ МЕЖДУ ФОРМАМИ ===== */
+.auth-form {
+    display: none;
+    width: 100%;
+    animation: fadeIn 0.3s ease;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+/* Плавное переключение между формами */
+.auth-form:not(.active) {
+    display: none;
+}
+
+/* ===== АНИМАЦИИ ДЛЯ ЭЛЕМЕНТОВ ===== */
+.chat-item, .message, .modal-content, .action-btn {
+    animation: scaleIn 0.25s ease;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* ===== АВТОРИЗАЦИЯ ===== */
@@ -41,12 +85,18 @@ body {
 .logo {
     text-align: center;
     margin-bottom: 48px;
+    animation: slideIn 0.4s ease;
 }
 
 .logo-icon {
     font-size: 64px;
     display: block;
     margin-bottom: 8px;
+    transition: transform 0.2s ease;
+}
+
+.logo-icon:hover {
+    transform: scale(1.1);
 }
 
 .logo h1 {
@@ -93,7 +143,7 @@ body {
     border-radius: 16px;
     font-size: 16px;
     color: #fff;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     appearance: none;
 }
 
@@ -108,10 +158,17 @@ body {
     outline: none;
     border-color: #fff;
     background: #1a1a1a;
+    transform: scale(1.02);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.1);
 }
 
 .input-group input::placeholder {
     color: #666;
+    transition: opacity 0.2s ease;
+}
+
+.input-group input:focus::placeholder {
+    opacity: 0.5;
 }
 
 .input-icon {
@@ -121,6 +178,11 @@ body {
     transform: translateY(-50%);
     font-size: 20px;
     color: #666;
+    transition: color 0.2s ease;
+}
+
+.input-group input:focus + .input-icon {
+    color: #fff;
 }
 
 .counter {
@@ -130,6 +192,7 @@ body {
     transform: translateY(-50%);
     color: #666;
     font-size: 12px;
+    transition: color 0.2s ease;
 }
 
 .hint {
@@ -138,6 +201,7 @@ body {
     font-size: 12px;
     margin-top: 4px;
     padding-left: 8px;
+    animation: fadeIn 0.2s ease;
 }
 
 /* ===== КНОПКИ ===== */
@@ -149,7 +213,27 @@ body {
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease;
+}
+
+.btn:active::after {
+    width: 300px;
+    height: 300px;
 }
 
 .btn-primary {
@@ -159,7 +243,7 @@ body {
 
 .btn-primary:active {
     background: #e0e0e0;
-    transform: scale(0.98);
+    transform: scale(0.97);
 }
 
 .btn-secondary {
@@ -169,11 +253,52 @@ body {
 
 .btn-secondary:active {
     background: #333;
+    transform: scale(0.97);
 }
 
 .btn:disabled {
     opacity: 0.5;
     pointer-events: none;
+}
+
+/* ===== ССЫЛКИ ===== */
+.switch-text {
+    text-align: center;
+    margin-top: 32px;
+    color: #666;
+    font-size: 15px;
+    animation: fadeIn 0.4s ease;
+}
+
+.switch-text a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 6px;
+    padding: 4px 8px;
+    border-radius: 100px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.switch-text a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: #fff;
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+}
+
+.switch-text a:active::after {
+    transform: scaleX(1);
+}
+
+.switch-text a:active {
+    background: #1a1a1a;
 }
 
 /* ===== ДЭШБОРД ===== */
@@ -184,6 +309,7 @@ body {
     padding-bottom: 20px;
     border-bottom: 1px solid #222;
     margin-bottom: 20px;
+    animation: slideIn 0.3s ease;
 }
 
 .dashboard-header h1 {
@@ -209,10 +335,14 @@ body {
     font-size: 20px;
     cursor: pointer;
     padding: 8px;
+    transition: all 0.2s ease;
+    border-radius: 50%;
 }
 
 .logout-button:active {
     color: #fff;
+    background: #1a1a1a;
+    transform: rotate(90deg);
 }
 
 /* ===== PULL TO REFRESH ===== */
@@ -222,6 +352,7 @@ body {
     font-size: 14px;
     padding: 10px;
     display: none;
+    animation: fadeIn 0.2s ease;
 }
 
 .pull-to-refresh.active {
@@ -245,6 +376,7 @@ body {
     display: flex;
     gap: 12px;
     margin-bottom: 32px;
+    animation: slideIn 0.35s ease;
 }
 
 .action-btn {
@@ -260,19 +392,30 @@ body {
     color: #fff;
     font-size: 15px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .action-btn:active {
     background: #222;
-    transform: scale(0.98);
+    transform: scale(0.96);
+    border-color: #fff;
 }
 
 .action-icon {
     font-size: 18px;
+    transition: transform 0.2s ease;
+}
+
+.action-btn:active .action-icon {
+    transform: scale(1.2);
 }
 
 /* ===== СПИСОК ЧАТОВ ===== */
+.chats-section {
+    animation: fadeIn 0.4s ease;
+}
+
 .chats-section h2 {
     font-size: 18px;
     font-weight: 500;
@@ -295,13 +438,15 @@ body {
     border: 1px solid #222;
     border-radius: 20px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .chat-item:active {
     background: #1a1a1a;
-    transform: scale(0.99);
+    transform: scale(0.98);
+    border-color: #fff;
 }
 
 .chat-avatar {
@@ -313,6 +458,12 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 24px;
+    transition: all 0.2s ease;
+}
+
+.chat-item:active .chat-avatar {
+    transform: scale(0.95);
+    background: #333;
 }
 
 .chat-info {
@@ -366,6 +517,7 @@ body {
     border-radius: 12px;
     font-size: 12px;
     font-weight: 600;
+    animation: scaleIn 0.2s ease;
 }
 
 /* ===== ПУСТОЙ ЧАТ ===== */
@@ -373,12 +525,18 @@ body {
     text-align: center;
     padding: 48px 20px;
     color: #666;
+    animation: fadeIn 0.5s ease;
 }
 
 .empty-icon {
     font-size: 48px;
     margin-bottom: 16px;
     display: block;
+    transition: transform 0.3s ease;
+}
+
+.empty-state:hover .empty-icon {
+    transform: scale(1.1);
 }
 
 .empty-state h3 {
@@ -401,6 +559,7 @@ body {
     padding-bottom: 12px;
     border-bottom: 1px solid #222;
     margin-bottom: 12px;
+    animation: slideIn 0.3s ease;
 }
 
 .chat-header-left {
@@ -416,6 +575,13 @@ body {
     font-size: 24px;
     cursor: pointer;
     padding: 4px;
+    transition: all 0.2s ease;
+    border-radius: 50%;
+}
+
+.back-button:active {
+    background: #1a1a1a;
+    transform: translateX(-3px);
 }
 
 .chat-info {
@@ -436,6 +602,94 @@ body {
     font-size: 20px;
     cursor: pointer;
     padding: 8px;
+    transition: all 0.2s ease;
+    border-radius: 50%;
+}
+
+.menu-button:active {
+    background: #1a1a1a;
+    transform: rotate(90deg);
+}
+
+/* ===== МОДАЛКИ ===== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.9);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal.active {
+    display: flex !important;
+    animation: fadeIn 0.25s ease;
+}
+
+.modal-content {
+    background: #111;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid #222;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    transform: scale(0.95);
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.modal.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #222;
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.close {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.close:active {
+    background: #1a1a1a;
+    color: #fff;
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid #222;
+}
+
+.modal-footer .btn {
+    flex: 1;
 }
 
 /* ===== СООБЩЕНИЯ ===== */
@@ -455,6 +709,8 @@ body {
     border-radius: 20px;
     position: relative;
     word-wrap: break-word;
+    animation: slideIn 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .message.own {
@@ -500,6 +756,11 @@ body {
     max-width: 100%;
     border-radius: 12px;
     margin-bottom: 4px;
+    transition: transform 0.2s ease;
+}
+
+.message-image img:active {
+    transform: scale(0.98);
 }
 
 .message-audio audio {
@@ -511,6 +772,11 @@ body {
     background: rgba(255,255,255,0.1);
     border-radius: 12px;
     padding: 8px;
+    transition: all 0.2s ease;
+}
+
+.message-file:active {
+    background: rgba(255,255,255,0.15);
 }
 
 .file-link {
@@ -535,6 +801,7 @@ body {
     padding-top: 16px;
     border-top: 1px solid #222;
     background: #000;
+    animation: slideIn 0.3s ease;
 }
 
 .attach-button,
@@ -551,6 +818,15 @@ body {
     color: #fff;
     font-size: 20px;
     cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.attach-button:active,
+.voice-button:active,
+.send-button:active {
+    background: #222;
+    transform: scale(0.9);
+    border-color: #fff;
 }
 
 .input-wrapper {
@@ -562,6 +838,13 @@ body {
     border: 1px solid #222;
     border-radius: 24px;
     padding: 8px 16px;
+    transition: all 0.2s ease;
+}
+
+.input-wrapper:focus-within {
+    border-color: #fff;
+    background: #1a1a1a;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.1);
 }
 
 #messageInput {
@@ -585,73 +868,11 @@ body {
     color: #666;
     padding: 4px 16px;
     font-style: italic;
+    animation: fadeIn 0.2s ease;
 }
 
 .typing-indicator.hidden {
     display: none;
-}
-
-/* ===== МОДАЛКИ ===== */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.9);
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 1000;
-}
-
-.modal.active {
-    display: flex;
-}
-
-.modal-content {
-    background: #111;
-    border-radius: 24px;
-    width: 100%;
-    max-width: 400px;
-    border: 1px solid #222;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #222;
-}
-
-.modal-header h3 {
-    font-size: 18px;
-    font-weight: 500;
-}
-
-.close {
-    background: none;
-    border: none;
-    color: #666;
-    font-size: 24px;
-    cursor: pointer;
-}
-
-.modal-body {
-    padding: 20px;
-}
-
-.modal-footer {
-    display: flex;
-    gap: 12px;
-    padding: 20px;
-    border-top: 1px solid #222;
-}
-
-.modal-footer .btn {
-    flex: 1;
 }
 
 /* ===== ТОСТ ===== */
@@ -671,31 +892,14 @@ body {
     z-index: 1000;
     max-width: 480px;
     margin: 0 auto;
-    transition: all 0.3s;
-}
-.switch-text {
-    text-align: center;
-    margin-top: 32px;
-    color: #666;
-    font-size: 15px;
-}
-
-.switch-text a {
-    color: #fff;
-    text-decoration: none;
-    font-weight: 600;
-    margin-left: 6px;
-    padding-bottom: 2px;
-    border-bottom: 2px solid #fff;
-}
-.switch-text a:active {
-    opacity: 0.7;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: slideIn 0.25s ease;
 }
 
 .toast.hidden {
     opacity: 0;
     visibility: hidden;
-    transform: translateY(20px);
+    transform: translateY(30px);
 }
 
 .toast.error {
@@ -722,6 +926,8 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 2000;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease;
 }
 
 .loader.hidden {
@@ -748,6 +954,43 @@ body {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+/* ===== СКРОЛЛБАР ===== */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
+
+/* ===== ХОВЕРЫ ДЛЯ ДЕСКТОПА ===== */
+@media (hover: hover) {
+    .chat-item:hover {
+        background: #1a1a1a;
+        border-color: #fff;
+        transform: scale(0.99);
+    }
+    
+    .btn-primary:hover {
+        background: #e0e0e0;
+    }
+    
+    .action-btn:hover {
+        background: #1a1a1a;
+        border-color: #666;
+    }
 }
 
 /* ===== ВСПОМОГАТЕЛЬНОЕ ===== */
@@ -780,4 +1023,39 @@ body {
         left: max(16px, env(safe-area-inset-left));
         right: max(16px, env(safe-area-inset-right));
     }
+}
+
+/* ===== АНИМАЦИЯ ПЕРЕКЛЮЧЕНИЯ ФОРМ ===== */
+.auth-form {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ===== АКТИВНЫЙ ЧАТ ===== */
+.chat-item.active {
+    background: #1a1a1a;
+    border-color: #fff;
+    border-width: 2px;
+}
+
+/* ===== ТЕНИ ===== */
+.modal-content, .chat-item, .action-btn {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* ===== НЕОН ДЛЯ ФОКУСА ===== */
+input:focus, .btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.1);
+}
+
+/* ===== ГЛАДКОСТИ ===== */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== СТАТУС БАР ===== */
+.status-bar {
+    height: env(safe-area-inset-top);
+    background: #000;
 }
