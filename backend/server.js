@@ -29,7 +29,7 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-// ✅ СТАТИКА — frontend папка
+// ========== СТАТИКА — В САМОМ НАЧАЛЕ ==========
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 const uploadsDir = path.join(__dirname, '../uploads');
@@ -38,12 +38,12 @@ if (!fs.existsSync(uploadsDir)) {
 }
 app.use('/uploads', express.static(uploadsDir));
 
-// ✅ API маршруты
+// ========== API МАРШРУТЫ ==========
 app.use('/api', authRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', messageRoutes);
 
-// ✅ Пинг
+// ========== ПИНГ И HEALTH ==========
 app.get('/ping', (req, res) => {
     res.status(200).json({ 
         status: 'alive', 
@@ -69,8 +69,12 @@ app.get('/health', async (req, res) => {
     }
 });
 
-// ✅ ЯВНОЕ УКАЗАНИЕ СТРАНИЦ
+// ========== ЯВНЫЕ МАРШРУТЫ ДЛЯ СТРАНИЦ ==========
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
@@ -82,7 +86,12 @@ app.get('/chat.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/chat.html'));
 });
 
-// ===== АВТОСОЗДАНИЕ ТАБЛИЦ =====
+// ========== 404 ДЛЯ ВСЕГО ОСТАЛЬНОГО ==========
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, '../frontend/404.html'));
+});
+
+// ========== АВТОСОЗДАНИЕ ТАБЛИЦ ==========
 async function initTables() {
     try {
         console.log('🔄 Проверка/создание таблиц...');
@@ -148,7 +157,7 @@ async function initTables() {
     }
 }
 
-// ===== ЗАПУСК =====
+// ========== ЗАПУСК ==========
 initTables().then(() => {
     const server = app.listen(PORT, () => {
         console.log(`🚀 Chaters server running on port ${PORT}`);
