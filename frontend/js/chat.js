@@ -3,8 +3,15 @@ console.log('💬 chat.js загружен');
 let currentChatId = null;
 let ws = null;
 let currentUser = null;
+let currentChat = null;
 let allMessagesLoaded = false;
 let loadingMessages = false;
+
+// Для голосовых сообщений
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+let recordingStartTime = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('📱 DOM готов');
@@ -24,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEventListeners();
     initFileUpload();
     initVoiceRecording();
+    loadMembers();
 });
 
 async function loadUserProfile() {
@@ -38,18 +46,56 @@ async function loadUserProfile() {
 
 async function loadChatInfo() {
     try {
-        const chatNameEl = document.querySelector('.chat-name');
-        const chatIdEl = document.querySelector('.chat-id');
-        
         const chats = await API.chats.getAll();
-        const currentChat = chats.find(c => c.chat_id === currentChatId);
+        currentChat = chats.find(c => c.chat_id === currentChatId);
         
         if (currentChat) {
-            chatNameEl.textContent = currentChat.name;
-            chatIdEl.textContent = currentChat.chat_id;
+            document.querySelector('.chat-name').textContent = currentChat.name;
+            document.querySelector('#menuChatName').textContent = currentChat.name;
+            document.querySelector('#menuChatId').textContent = currentChat.chat_id;
+            document.querySelector('#currentChatName').textContent = currentChat.name;
+            document.querySelector('#currentChatId').textContent = currentChat.chat_id;
+            
+            // Показываем настройки только создателю
+            if (currentChat.created_by === currentUser?.id) {
+                document.getElementById('creatorSettings').classList.remove('hidden');
+                document.getElementById('deleteChatItem').classList.remove('hidden');
+            }
         }
     } catch (error) {
         console.error('❌ Ошибка загрузки информации о чате');
+    }
+}
+
+async function loadMembers() {
+    try {
+        const members = await API.chats.getMembers(currentChatId);
+        const membersList = document.getElementById('membersList');
+        const membersCount = document.querySelector('.chat-members-count');
+        const membersCountBadge = document.getElementById('membersCountBadge');
+        
+        membersCount.textContent = `${members.length} участников`;
+        membersCountBadge.textContent = members.length;
+        
+        membersList.innerHTML = members.map(member => {
+            const isCreator = member.id === currentChat?.created_by;
+            const isMe = member.id === currentUser?.id;
+            
+            return `
+                <div class="member-item" data-user-id="${member.id}">
+                    <div class="member-avatar">👤</div>
+                    <div class="member-info">
+                        <span class="member-name">${escapeHtml(member.nickname)}${isMe ? ' (Вы)' : ''}</span>
+                        ${isCreator ? '<span class="member-badge">Создатель</span>' : ''}
+                    </div>
+                    ${currentChat?.created_by === currentUser?.id && !isCreator && !isMe ? 
+                        '<button class="member-kick" onclick="window.kickMember(' + member.id + ')">✕</button>' : ''}
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('❌ Ошибка загрузки участников:', error);
     }
 }
 
@@ -63,7 +109,6 @@ async function loadMessages() {
         console.log('🔄 Загрузка сообщений...');
         const messages = await API.messages.get(currentChatId, 50);
         
-        // ✅ ФИКС: проверяем, что messages — массив
         if (!Array.isArray(messages)) {
             console.error('❌ messages не массив:', messages);
             return;
@@ -72,7 +117,6 @@ async function loadMessages() {
         console.log(`✅ Загружено ${messages.length} сообщений`);
         
         const container = document.getElementById('messagesContainer');
-        container.innerHTML = '';
         
         if (messages.length === 0) {
             document.getElementById('emptyChat').classList.remove('hidden');
@@ -81,10 +125,17 @@ async function loadMessages() {
         
         document.getElementById('emptyChat').classList.add('hidden');
         
-        // Сортируем от старых к новым для отображения
+        // Сохраняем позицию скролла
+        const scrollTop = container.scrollTop;
+        const scrollHeight = container.scrollHeight;
+        
+        // Сортируем от старых к новым (сверху вниз)
         messages.sort((a, b) => new Date(a.sent_at) - new Date(b.sent_at));
         
-        messages.forEach(message => appendMessage(message));
+        // Добавляем сообщения в контейнер (они пойдут сверху вниз)
+        messages.forEach(message => appendMessage(message, false));
+        
+        // Скроллим вниз (к последнему сообщению)
         scrollToBottom();
         
     } catch (error) {
@@ -96,13 +147,12 @@ async function loadMessages() {
     }
 }
 
-function appendMessage(message) {
+function appendMessage(message, scroll = true) {
     if (!message || !message.id) return;
     
     const container = document.getElementById('messagesContainer');
     const isOwn = message.user_id === currentUser?.id;
     
-    // Удаляем старую версию сообщения если есть
     const existing = document.querySelector(`.message[data-message-id="${message.id}"]`);
     if (existing) existing.remove();
     
@@ -157,7 +207,122 @@ function appendMessage(message) {
     `;
     
     container.appendChild(messageEl);
-    scrollToBottom();
+    
+    if (scroll) {
+        scrollToBottom();
+    }
+}
+
+function scrollToBottom() {
+    const container = document.getElementById('messagesContainer');
+    container.scrollTop = container.scrollHeight;
+}
+
+// НОВАЯ ЛОГИКА ГОЛОСОВЫХ
+function initVoiceRecording() {
+    const input = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendButton');
+    const voiceBtn = document.getElementById('voiceButton');
+    const wrapper = document.getElementById('messageInputWrapper');
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        voiceBtn.style.display = 'none';
+        return;
+    }
+    
+    // Показываем/скрываем кнопку голосового в зависимости от пустоты инпута
+    input.addEventListener('input', function() {
+        const isEmpty = this.value.trim() === '';
+        
+        if (isEmpty) {
+            sendBtn.classList.add('hidden');
+            voiceBtn.classList.remove('hidden');
+            wrapper.classList.add('voice-mode');
+        } else {
+            sendBtn.classList.remove('hidden');
+            voiceBtn.classList.add('hidden');
+            wrapper.classList.remove('voice-mode');
+        }
+    });
+    
+    // Триггерим начальное состояние
+    input.dispatchEvent(new Event('input'));
+    
+    // Запись голоса по зажатию кнопки
+    voiceBtn.addEventListener('mousedown', startRecording);
+    voiceBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        startRecording();
+    });
+    
+    // Остановка записи при отпускании
+    [document, voiceBtn].forEach(el => {
+        el.addEventListener('mouseup', stopRecording);
+        el.addEventListener('touchend', stopRecording);
+        el.addEventListener('touchcancel', stopRecording);
+    });
+}
+
+async function startRecording(e) {
+    if (e) e.preventDefault();
+    if (isRecording) return;
+    
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const audioFile = new File([audioBlob], 'voice-message.webm', { type: 'audio/webm' });
+            
+            // Отправляем голосовое
+            try {
+                const message = await API.messages.sendFile(currentChatId, audioFile);
+                appendMessage(message);
+                
+                if (ws?.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'message',
+                        chatId: currentChatId,
+                        message: message
+                    }));
+                }
+            } catch (error) {
+                console.error('❌ Ошибка отправки голосового:', error);
+                API.showToast('Ошибка отправки голосового', 'error');
+            }
+            
+            stream.getTracks().forEach(track => track.stop());
+            isRecording = false;
+            voiceBtn.classList.remove('recording');
+        };
+        
+        mediaRecorder.start();
+        isRecording = true;
+        recordingStartTime = Date.now();
+        voiceBtn.classList.add('recording');
+        
+    } catch (error) {
+        console.error('❌ Нет доступа к микрофону');
+        API.showToast('Микрофон недоступен', 'error');
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        // Не отправляем, если запись длилась меньше 1 секунды
+        if (Date.now() - recordingStartTime < 1000) {
+            mediaRecorder.stop();
+            return;
+        }
+        mediaRecorder.stop();
+    }
 }
 
 async function sendMessage() {
@@ -168,15 +333,12 @@ async function sendMessage() {
     
     input.value = '';
     input.style.height = 'auto';
+    input.dispatchEvent(new Event('input'));
     
     try {
-        console.log('📤 Отправка сообщения:', content);
         const message = await API.messages.sendText(currentChatId, content);
-        
-        // Добавляем сообщение сразу
         appendMessage(message);
         
-        // Отправляем через WebSocket
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
                 type: 'message',
@@ -188,7 +350,7 @@ async function sendMessage() {
     } catch (error) {
         console.error('❌ Ошибка отправки:', error);
         API.showToast('Не удалось отправить сообщение', 'error');
-        input.value = content; // Возвращаем текст
+        input.value = content;
     }
 }
 
@@ -212,6 +374,19 @@ async function deleteMessage(messageId) {
     } catch (error) {
         console.error('❌ Ошибка удаления:', error);
         API.showToast('Не удалось удалить сообщение', 'error');
+    }
+}
+
+async function kickMember(userId) {
+    if (!confirm('Исключить участника?')) return;
+    
+    try {
+        await API.chats.kickMember(currentChatId, userId);
+        await loadMembers();
+        API.showToast('Участник исключен', 'success');
+    } catch (error) {
+        console.error('❌ Ошибка исключения:', error);
+        API.showToast('Не удалось исключить участника', 'error');
     }
 }
 
@@ -240,6 +415,8 @@ function initWebSocket() {
                 if (msg) msg.remove();
             } else if (data.type === 'typing') {
                 showTypingIndicator(data.userNickname);
+            } else if (data.type === 'chat_updated') {
+                loadChatInfo();
             }
         } catch (error) {
             console.error('WebSocket error:', error);
@@ -256,7 +433,9 @@ function initEventListeners() {
     const input = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendButton');
     const backBtn = document.querySelector('.back-button');
-    const menuBtn = document.querySelector('.menu-button');
+    const chatHeader = document.getElementById('chatHeader');
+    const menuOverlay = document.getElementById('chatMenu');
+    const closeMenu = document.querySelector('.close-menu');
     
     // Отправка по Enter
     input.addEventListener('keypress', (e) => {
@@ -282,32 +461,115 @@ function initEventListeners() {
     sendBtn.addEventListener('click', sendMessage);
     
     // Назад
-    if (backBtn) {
-        backBtn.addEventListener('click', () => {
-            window.location.href = '/dashboard.html';
-        });
-    }
+    backBtn.addEventListener('click', () => {
+        window.location.href = '/dashboard.html';
+    });
     
-    // Меню чата
-    if (menuBtn) {
-        menuBtn.addEventListener('click', () => {
-            document.getElementById('chatMenu').classList.toggle('hidden');
-        });
-    }
+    // Открытие меню по клику на название
+    chatHeader.addEventListener('click', (e) => {
+        // Не открываем меню при клике на кнопку назад
+        if (e.target.closest('.back-button')) return;
+        
+        menuOverlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    });
     
-    // Закрыть меню при клике вне
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.menu-button') && !e.target.closest('.chat-menu')) {
-            document.getElementById('chatMenu').classList.add('hidden');
+    // Закрытие меню
+    closeMenu.addEventListener('click', () => {
+        menuOverlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    });
+    
+    menuOverlay.addEventListener('click', (e) => {
+        if (e.target === menuOverlay) {
+            menuOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
         }
+    });
+    
+    // Редактирование названия чата
+    document.getElementById('editChatNameItem').addEventListener('click', () => {
+        document.getElementById('editNameModal').classList.add('active');
+        document.getElementById('editChatNameInput').value = currentChat.name;
+    });
+    
+    // Редактирование ID чата
+    document.getElementById('editChatIdItem').addEventListener('click', () => {
+        document.getElementById('editIdModal').classList.add('active');
+        document.getElementById('editChatIdInput').value = currentChat.chat_id;
+    });
+    
+    // Сохранение названия
+    document.getElementById('saveChatNameBtn').addEventListener('click', async () => {
+        const newName = document.getElementById('editChatNameInput').value.trim();
+        if (!newName) return;
+        
+        try {
+            await API.chats.updateSettings(currentChatId, { name: newName });
+            currentChat.name = newName;
+            await loadChatInfo();
+            document.getElementById('editNameModal').classList.remove('active');
+            API.showToast('Название обновлено', 'success');
+        } catch (error) {
+            API.showToast('Ошибка обновления', 'error');
+        }
+    });
+    
+    // Сохранение ID
+    document.getElementById('saveChatIdBtn').addEventListener('click', async () => {
+        let newId = document.getElementById('editChatIdInput').value.trim();
+        if (!newId) return;
+        
+        if (!newId.startsWith('#')) {
+            newId = '#' + newId;
+        }
+        
+        try {
+            await API.chats.updateSettings(currentChatId, { chatId: newId });
+            currentChat.chat_id = newId;
+            await loadChatInfo();
+            document.getElementById('editIdModal').classList.remove('active');
+            API.showToast('ID чата обновлен', 'success');
+        } catch (error) {
+            API.showToast('Ошибка обновления', 'error');
+        }
+    });
+    
+    // Удаление чата
+    document.getElementById('deleteChatItem').addEventListener('click', async () => {
+        if (!confirm('Удалить чат навсегда? Это действие нельзя отменить.')) return;
+        
+        try {
+            await API.chats.delete(currentChatId);
+            window.location.href = '/dashboard.html';
+        } catch (error) {
+            API.showToast('Ошибка удаления чата', 'error');
+        }
+    });
+    
+    // Выход из чата
+    document.getElementById('leaveChatItem').addEventListener('click', async () => {
+        if (!confirm('Покинуть чат?')) return;
+        
+        try {
+            await API.chats.leave(currentChatId);
+            window.location.href = '/dashboard.html';
+        } catch (error) {
+            API.showToast('Ошибка выхода из чата', 'error');
+        }
+    });
+    
+    // Закрытие модалок
+    document.querySelectorAll('.modal .close, .modal .cancel-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.closest('.modal').classList.remove('active');
+        });
     });
 }
 
 function initFileUpload() {
     const attachBtn = document.getElementById('attachButton');
     const fileInput = document.getElementById('fileInput');
-    
-    if (!attachBtn || !fileInput) return;
     
     attachBtn.addEventListener('click', () => {
         fileInput.click();
@@ -320,7 +582,6 @@ function initFileUpload() {
         API.showLoader();
         
         try {
-            console.log('📎 Отправка файла:', file.name);
             const message = await API.messages.sendFile(currentChatId, file);
             appendMessage(message);
             
@@ -342,75 +603,6 @@ function initFileUpload() {
     });
 }
 
-let mediaRecorder = null;
-let audioChunks = [];
-
-function initVoiceRecording() {
-    const voiceBtn = document.getElementById('voiceButton');
-    
-    if (!voiceBtn) return;
-    
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        voiceBtn.style.display = 'none';
-        return;
-    }
-    
-    voiceBtn.addEventListener('click', toggleVoiceRecording);
-}
-
-async function toggleVoiceRecording() {
-    const button = document.getElementById('voiceButton');
-    
-    if (mediaRecorder?.state === 'recording') {
-        mediaRecorder.stop();
-        button.innerHTML = '🎤';
-        button.classList.remove('recording');
-    } else {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            
-            mediaRecorder.ondataavailable = (event) => {
-                audioChunks.push(event.data);
-            };
-            
-            mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                const audioFile = new File([audioBlob], 'voice-message.webm', { type: 'audio/webm' });
-                
-                try {
-                    console.log('🎤 Отправка голосового');
-                    const message = await API.messages.sendFile(currentChatId, audioFile);
-                    appendMessage(message);
-                    
-                    if (ws?.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify({
-                            type: 'message',
-                            chatId: currentChatId,
-                            message: message
-                        }));
-                    }
-                } catch (error) {
-                    console.error('❌ Ошибка отправки голосового:', error);
-                    API.showToast('Ошибка отправки голосового', 'error');
-                }
-                
-                stream.getTracks().forEach(track => track.stop());
-            };
-            
-            mediaRecorder.start();
-            button.innerHTML = '⏹';
-            button.classList.add('recording');
-            
-        } catch (error) {
-            console.error('❌ Нет доступа к микрофону');
-            API.showToast('Микрофон недоступен', 'error');
-        }
-    }
-}
-
 function showTypingIndicator(nickname) {
     const indicator = document.getElementById('typingIndicator');
     if (!indicator) return;
@@ -422,11 +614,6 @@ function showTypingIndicator(nickname) {
     window.typingTimeout = setTimeout(() => {
         indicator.classList.add('hidden');
     }, 2000);
-}
-
-function scrollToBottom() {
-    const container = document.getElementById('messagesContainer');
-    container.scrollTop = container.scrollHeight;
 }
 
 function showLoader() {
@@ -447,37 +634,22 @@ function escapeHtml(text) {
 // Глобальные функции
 window.sendMessage = sendMessage;
 window.deleteMessage = deleteMessage;
-window.leaveChat = async function() {
-    if (!confirm('Покинуть чат?')) return;
-    
-    try {
-        await API.chats.leave(currentChatId);
-        window.location.href = '/dashboard.html';
-    } catch (error) {
-        console.error('Ошибка выхода из чата');
-        API.showToast('Не удалось покинуть чат', 'error');
-    }
-};
-
-window.showMembers = function() {
-    console.log('Показ участников');
-    // TODO
-};
-
-window.showSettings = function() {
-    console.log('Настройки чата');
-    // TODO
-};
-
+window.kickMember = kickMember;
 window.openImagePreview = function(url) {
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.innerHTML = `
-        <div class="modal-content" style="background: none; border: none;">
-            <img src="${url}" style="max-width: 100%; max-height: 80vh; border-radius: 12px;">
-            <button class="close" style="position: absolute; top: 20px; right: 20px;">×</button>
-        </div>
-    `;
-    modal.addEventListener('click', () => modal.remove());
-    document.body.appendChild(modal);
+    const modal = document.getElementById('imagePreviewModal');
+    const img = document.getElementById('previewImage');
+    img.src = url;
+    modal.classList.add('active');
+    
+    modal.querySelector('.close-modal').onclick = () => {
+        modal.classList.remove('active');
+        img.src = '';
+    };
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+            img.src = '';
+        }
+    });
 };
