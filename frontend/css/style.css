@@ -531,17 +531,25 @@ body {
     background: rgb(50, 50, 50);
 }
 
-.chat-info {
+.chat-header .chat-info {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.chat-name {
+/* ФИКС — ТОЛЬКО ДЛЯ ШАПКИ ЧАТА */
+.chat-header .chat-name {
     font-size: 18px;
     font-weight: 600;
     color: rgb(255, 255, 255);
+    background: none;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    text-decoration: none;
 }
 
 .chat-members-count {
@@ -1122,4 +1130,23 @@ body {
         padding-left: max(20px, env(safe-area-inset-left));
         padding-right: max(20px, env(safe-area-inset-right));
     }
+}
+.chat-name,
+.chat-header .chat-name,
+.chat-info .chat-name,
+.chat-item .chat-name {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+    background: none !important;
+}
+
+.chat-item:focus,
+.chat-item:focus-within,
+.chat-item:active,
+.chat-item:hover {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
 }
