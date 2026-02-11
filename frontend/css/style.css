@@ -495,14 +495,8 @@ body {
     align-items: center;
     padding: 12px 20px;
     margin: -20px -16px 16px -16px;
-    background: rgb(38,38,38);
-    border-bottom: 1px solid rgb(40, 40, 40);
     cursor: pointer;
     transition: background 0.2s ease;
-}
-
-.chat-header:active {
-    background: rgb(45, 45, 45);
 }
 
 .chat-header-left {
@@ -1149,4 +1143,28 @@ body {
     outline: none !important;
     border: none !important;
     box-shadow: none !important;
+}
+
+.chat-container {
+    width: 100%;
+    height: 100vh;  /* ВЫСОТА = ВЕСЬ ЭКРАН */
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    background: rgb(30, 30, 30);
+    overflow: hidden;  /* НИКАКОГО СКРОЛЛА У КОНТЕЙНЕРА */
+}
+
+.messages-container {
+    flex: 1 1 0;  /* РАСТЯГИВАЙСЯ, СУКА! */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 0;
+    min-height: 0;
+    height: 0;  /* ПРИНУДИТЕЛЬНО */
+    scroll-behavior: smooth;
 }
