@@ -325,6 +325,7 @@ body {
     display: flex;
     align-items: center;
     gap: 16px;
+    background: rgb(38,38,38);
     padding: 12px 16px;
     border-radius: 14px;
     cursor: pointer;
@@ -494,8 +495,8 @@ body {
     align-items: center;
     padding: 12px 20px;
     margin: -20px -16px 16px -16px;
-    background: rgb(35, 35, 35);
-    border-bottom: 1px solid rgb(50, 50, 50);
+    background: rgb(38,38,38);
+    border-bottom: 1px solid rgb(40, 40, 40);
     cursor: pointer;
     transition: background 0.2s ease;
 }
