@@ -29,16 +29,23 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-// ========== СТАТИКА — АБСОЛЮТНЫЙ ПУТЬ ==========
-const frontendPath = path.join(__dirname, '../../frontend');
-console.log('📁 Frontend path:', frontendPath);
-app.use(express.static(frontendPath));
+// ========== ЖЕСТКАЯ ФИКСАЦИЯ ПУТЕЙ ==========
+const PROJECT_ROOT = path.join(__dirname, '..');  // /opt/render/project/
+const FRONTEND_PATH = path.join(PROJECT_ROOT, 'frontend');
+const UPLOADS_PATH = path.join(PROJECT_ROOT, 'uploads');
 
-const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
+console.log('📁 Project root:', PROJECT_ROOT);
+console.log('📁 Frontend path:', FRONTEND_PATH);
+console.log('📁 Uploads path:', UPLOADS_PATH);
+
+// Раздаем статику
+app.use(express.static(FRONTEND_PATH));
+
+// Создаем папку для загрузок
+if (!fs.existsSync(UPLOADS_PATH)) {
+    fs.mkdirSync(UPLOADS_PATH, { recursive: true });
 }
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', express.static(UPLOADS_PATH));
 
 // ========== API МАРШРУТЫ ==========
 app.use('/api', authRoutes);
@@ -71,9 +78,26 @@ app.get('/health', async (req, res) => {
     }
 });
 
+// ========== ЯВНЫЕ МАРШРУТЫ ДЛЯ СТРАНИЦ ==========
+app.get('/', (req, res) => {
+    res.sendFile(path.join(FRONTEND_PATH, 'index.html'));
+});
+
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(FRONTEND_PATH, 'index.html'));
+});
+
+app.get('/dashboard.html', (req, res) => {
+    res.sendFile(path.join(FRONTEND_PATH, 'dashboard.html'));
+});
+
+app.get('/chat.html', (req, res) => {
+    res.sendFile(path.join(FRONTEND_PATH, 'chat.html'));
+});
+
 // ========== 404 ==========
 app.use((req, res) => {
-    res.status(404).sendFile(path.join(frontendPath, '404.html'));
+    res.status(404).sendFile(path.join(FRONTEND_PATH, '404.html'));
 });
 
 // ========== АВТОСОЗДАНИЕ ТАБЛИЦ ==========
