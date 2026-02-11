@@ -1,13 +1,12 @@
 services:
   - type: web
     name: chaters
-    rootDir: backend
     env: node
     region: frankfurt
     plan: free
     branch: main
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -21,7 +20,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CLIENT_URL
-        value: https://chaters.onrender.com
+        value: https://chaters-8ylq.onrender.com
       - key: MAX_FILE_SIZE
         value: 10485760
 
