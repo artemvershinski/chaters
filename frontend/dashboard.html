@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Chaters — чаты</title>
+    
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-container">
+        <!-- Шапка -->
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1>chaters</h1>
+            </div>
+            <div class="header-right">
+                <span id="userNickname" class="user-nickname"></span>
+                <button id="logoutBtn" class="logout-button" aria-label="Выйти">⇢</button>
+            </div>
+        </div>
+
+        <!-- Pull to refresh индикатор -->
+        <div class="pull-to-refresh">
+            <span class="ptr-text">Потяните для обновления</span>
+            <span class="ptr-loader hidden">⏳</span>
+        </div>
+
+        <!-- Кнопки действий -->
+        <div class="actions">
+            <button id="createChatBtn" class="action-btn">
+                <span class="action-icon">+</span>
+                Создать чат
+            </button>
+            <button id="joinChatBtn" class="action-btn">
+                <span class="action-icon">⇢</span>
+                Присоединиться
+            </button>
+        </div>
+
+        <!-- Список чатов -->
+        <div class="chats-section">
+            <h2>Мои чаты</h2>
+            <div id="chatsList" class="chats-list"></div>
+            <div id="emptyState" class="empty-state">
+                <span class="empty-icon">💬</span>
+                <h3>Нет чатов</h3>
+                <p>Создайте новый чат или присоединитесь к существующему</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка создания чата -->
+    <div id="createChatModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Создать чат</h3>
+                <button class="close" aria-label="Закрыть">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="createChatId">ID чата</label>
+                    <input 
+                        type="text" 
+                        id="createChatId" 
+                        placeholder="#чат" 
+                        maxlength="30"
+                        autocomplete="off"
+                        aria-label="ID чата"
+                    >
+                    <small class="hint">Только английские буквы, цифры и точки</small>
+                </div>
+                <div class="input-group">
+                    <label for="createChatName">Название чата</label>
+                    <input 
+                        type="text" 
+                        id="createChatName" 
+                        placeholder="Название"
+                        maxlength="50"
+                        autocomplete="off"
+                        aria-label="Название чата"
+                    >
+                </div>
+                <div class="input-group">
+                    <label for="messageTtl">Удалять сообщения через</label>
+                    <select id="messageTtl" name="messageTtl" title="Время удаления сообщений">
+                        <option value="1">1 день</option>
+                        <option value="3">3 дня</option>
+                        <option value="7">7 дней</option>
+                        <option value="30">30 дней</option>
+                        <option value="0">Никогда</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary cancel-btn">Отмена</button>
+                <button id="createChatSubmit" class="btn btn-primary">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка присоединения к чату -->
+    <div id="joinChatModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Присоединиться к чату</h3>
+                <button class="close" aria-label="Закрыть">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="joinChatId">ID чата</label>
+                    <input 
+                        type="text" 
+                        id="joinChatId" 
+                        placeholder="#чат" 
+                        maxlength="30"
+                        autocomplete="off"
+                        aria-label="ID чата"
+                    >
+                    <small class="hint">Введите ID чата, начиная с #</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary cancel-btn">Отмена</button>
+                <button id="joinChatSubmit" class="btn btn-primary">Присоединиться</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка смены ника -->
+    <div id="nicknameModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Сменить ник</h3>
+                <button class="close" aria-label="Закрыть">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="newNickname">Новый ник</label>
+                    <input 
+                        type="text" 
+                        id="newNickname" 
+                        placeholder="Ник" 
+                        maxlength="20"
+                        autocomplete="off"
+                        aria-label="Новый ник"
+                    >
+                    <small class="counter">0/20</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary cancel-btn">Отмена</button>
+                <button id="updateNicknameBtn" class="btn btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Загрузчик -->
+    <div id="loader" class="loader hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
