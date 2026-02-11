@@ -10,7 +10,7 @@
     -ms-user-select: none !important;
 }
 
-input, textarea, .message-text, .message-caption, .chat-name, .chat-id-badge, .last-message, .member-name {
+input, textarea, .message-text, .message-caption, .chat-name, .member-name {
     user-select: text !important;
     -webkit-user-select: text !important;
     -moz-user-select: text !important;
@@ -320,12 +320,13 @@ body {
     gap: 2px;
 }
 
+/* ===== ЭЛЕМЕНТ ЧАТА — СВЕТЛЕЕ ФОНА ===== */
 .chat-item {
     display: flex;
     align-items: center;
     gap: 16px;
     padding: 12px 16px;
-    background: rgb(30, 30, 30);
+    background: rgb(38, 38, 38);  /* Светлее основного фона (30,30,30) */
     border-radius: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -366,7 +367,7 @@ body {
     width: 100%;
 }
 
-/* ===== НАЗВАНИЕ ЧАТА — СЛЕВА, ВО ВСЮ ШИРИНУ ===== */
+/* ===== НАЗВАНИЕ ЧАТА — ИДЕАЛЬНО СПРАВА ОТ АВАТАРКИ ===== */
 .chat-name {
     font-size: 17px;
     font-weight: 600;
@@ -374,12 +375,23 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 85%;  /* БОЛЬШЕ МЕСТА */
+    max-width: 75%;
     background: none;
     border: none;
     padding: 0;
     margin: 0;
     text-align: left;
+    line-height: 1.2;
+}
+
+/* Убираем любые обводки, бордеры, тени */
+.chat-name:focus, 
+.chat-name:hover,
+.chat-item:focus,
+.chat-item:hover {
+    outline: none;
+    border: none;
+    box-shadow: none;
 }
 
 .chat-time {
@@ -389,27 +401,12 @@ body {
     margin-left: auto;
 }
 
-/* ===== ID ЧАТА — ПОЛНОСТЬЮ УБРАН ===== */
-.chat-id-badge {
-    display: none !important;  /* ХУЙ, А НЕ ID */
-}
-
-/* ===== ПОСЛЕДНЕЕ СООБЩЕНИЕ — СЛЕВА НАПРАВО ===== */
-.last-message {
-    font-size: 14px;
-    color: rgb(160, 160, 160);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    text-align: left;
-    margin-top: 2px;
-}
-
-.last-message-sender {
-    color: rgb(180, 180, 180);
-    font-weight: 500;
-    margin-right: 4px;
+/* ===== ID ЧАТА И ПОСЛЕДНЕЕ СООБЩЕНИЕ — ПОЛНОСТЬЮ УБРАНЫ ===== */
+.chat-id-badge,
+.last-message,
+.last-message-sender,
+.last-message-text {
+    display: none !important;
 }
 
 .unread-badge {
@@ -627,67 +624,6 @@ body {
     line-height: 1.4;
     word-break: break-word;
     color: rgb(255, 255, 255);
-}
-
-.message-copied {
-    background: rgb(60, 60, 60) !important;
-    transition: background 0.2s ease;
-}
-
-/* ===== УДАЛЕНИЕ СООБЩЕНИЙ ===== */
-.message-delete-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 4000;
-    animation: fadeIn 0.2s ease;
-}
-
-.delete-confirm {
-    background: rgb(40, 40, 40);
-    border: 1px solid rgb(200, 60, 60);
-    border-radius: 20px;
-    padding: 24px;
-    width: 280px;
-    text-align: center;
-}
-
-.delete-confirm p {
-    color: rgb(255, 255, 255);
-    font-size: 16px;
-    margin-bottom: 20px;
-}
-
-.delete-confirm-buttons {
-    display: flex;
-    gap: 12px;
-}
-
-.delete-confirm-btn {
-    flex: 1;
-    padding: 12px;
-    border-radius: 14px;
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-}
-
-.delete-confirm-btn.cancel {
-    background: rgb(50, 50, 50);
-    color: rgb(255, 255, 255);
-}
-
-.delete-confirm-btn.delete {
-    background: rgb(200, 60, 60);
-    color: white;
 }
 
 /* ===== ФАЙЛЫ ===== */
