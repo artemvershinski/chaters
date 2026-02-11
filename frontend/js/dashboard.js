@@ -78,9 +78,7 @@ function renderChats() {
                 <div class="chat-info">
                     <div class="chat-header">
                         <span class="chat-name">${escapeHtml(chat.name)}</span>
-                        <span class="chat-time">${time}</span>
                     </div>
-                    ${lastMessage}
                 </div>
                 ${unreadBadge}
             </div>
