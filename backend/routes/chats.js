@@ -236,5 +236,31 @@ router.put('/chats/:chatId/settings', verifyToken, async (req, res) => {
         res.status(500).json({ error: 'Ошибка обновления настроек' });
     }
 });
+// ========== УДАЛЕНИЕ ЧАТА (ДЛЯ СОЗДАТЕЛЯ) ==========
+router.delete('/chats/:chatId', verifyToken, async (req, res) => {
+    try {
+        const { chatId } = req.params;
 
+        const chat = await pool.query(
+            'SELECT * FROM chats WHERE chat_id = $1',
+            [chatId]
+        );
+
+        if (chat.rows.length === 0) {
+            return res.status(404).json({ error: 'Чат не найден' });
+        }
+
+        if (chat.rows[0].created_by !== req.userId) {
+            return res.status(403).json({ error: 'Только создатель может удалить чат' });
+        }
+
+        // Удаляем чат (каскадно удалятся все сообщения и участники)
+        await pool.query('DELETE FROM chats WHERE id = $1', [chat.rows[0].id]);
+
+        res.json({ message: 'Чат удален' });
+    } catch (error) {
+        console.error('❌ Delete chat error:', error);
+        res.status(500).json({ error: 'Ошибка удаления чата' });
+    }
+});
 module.exports = router;
