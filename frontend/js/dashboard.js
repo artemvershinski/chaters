@@ -80,7 +80,6 @@ function renderChats() {
                         <span class="chat-name">${escapeHtml(chat.name)}</span>
                         <span class="chat-time">${time}</span>
                     </div>
-                    <div class="chat-id-badge">${escapeHtml(chat.chat_id)}</div>
                     ${lastMessage}
                 </div>
                 ${unreadBadge}
