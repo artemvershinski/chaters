@@ -29,10 +29,12 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-// ========== СТАТИКА ==========
-app.use(express.static(path.join(__dirname, '../frontend')));
+// ========== СТАТИКА — АБСОЛЮТНЫЙ ПУТЬ ==========
+const frontendPath = path.join(__dirname, '../../frontend');
+console.log('📁 Frontend path:', frontendPath);
+app.use(express.static(frontendPath));
 
-const uploadsDir = path.join(__dirname, '../uploads');
+const uploadsDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -71,7 +73,7 @@ app.get('/health', async (req, res) => {
 
 // ========== 404 ==========
 app.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, '../frontend/404.html'));
+    res.status(404).sendFile(path.join(frontendPath, '404.html'));
 });
 
 // ========== АВТОСОЗДАНИЕ ТАБЛИЦ ==========
