@@ -1,3 +1,23 @@
+console.log('dashboard.js загрузился!');
+console.log('API есть?', typeof API !== 'undefined' ? '✅ ДА' : '❌ НЕТ');
+
+// И В КАЖДУЮ КНОПКУ:
+document.getElementById('createChatBtn')?.addEventListener('click', () => {
+    console.log('НАЖАТА КНОПКА: создать чат');
+    // ВРЕМЕННО — просто покажи alert
+    alert('Кнопка работает!');
+});
+
+document.getElementById('joinChatBtn')?.addEventListener('click', () => {
+    console.log('НАЖАТА КНОПКА: присоединиться');
+    alert('Кнопка работает!');
+});
+
+document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    console.log('НАЖАТА КНОПКА: выход');
+});
+
+
 let userChats = [];
 let currentUser = null;
 
