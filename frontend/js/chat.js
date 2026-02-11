@@ -29,12 +29,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadUserProfile();
     await loadChatInfo();
     await loadMessages();
-    await loadMembers(); // Загружаем участников сразу
+    await loadMembers();
     initWebSocket();
     initEventListeners();
     initFileUpload();
     initVoiceRecording();
     initMessageLongPress();
+    initCopyOnLongPress();
 });
 
 // ===== ПРОФИЛЬ =====
@@ -71,23 +72,19 @@ async function loadChatInfo() {
     }
 }
 
-// ===== УЧАСТНИКИ (ИСПРАВЛЕНО) =====
+// ===== УЧАСТНИКИ =====
 async function loadMembers() {
     try {
         console.log('🔄 Загрузка участников чата:', currentChatId);
         
-        // Получаем участников через API
         const members = await API.chats.getMembers(currentChatId);
-        console.log('✅ Загружено участников:', members.length, members);
+        console.log('✅ Загружено участников:', members.length);
         
         const membersList = document.getElementById('membersList');
         const membersCount = document.querySelector('.chat-members-count');
         const membersCountBadge = document.getElementById('membersCountBadge');
         
-        if (!membersList) {
-            console.error('❌ membersList не найден в DOM');
-            return;
-        }
+        if (!membersList) return;
         
         if (membersCount) {
             membersCount.textContent = `${members.length} участников`;
@@ -153,11 +150,6 @@ async function loadMessages() {
         console.log('🔄 Загрузка сообщений...');
         const messages = await API.messages.get(currentChatId, 50);
         
-        if (!Array.isArray(messages)) {
-            console.error('❌ messages не массив:', messages);
-            return;
-        }
-        
         console.log(`✅ Загружено ${messages.length} сообщений`);
         
         const container = document.getElementById('messagesContainer');
@@ -187,7 +179,7 @@ async function loadMessages() {
     }
 }
 
-// ===== ОТОБРАЖЕНИЕ СООБЩЕНИЯ (ТГ СТИЛЬ) =====
+// ===== ОТОБРАЖЕНИЕ СООБЩЕНИЯ =====
 function appendMessage(message, scroll = true) {
     if (!message || !message.id) return;
     
@@ -201,6 +193,7 @@ function appendMessage(message, scroll = true) {
     messageEl.className = `message ${isOwn ? 'own' : 'other'}`;
     messageEl.dataset.messageId = message.id;
     messageEl.dataset.userId = message.user_id;
+    messageEl.dataset.messageContent = message.content || '';
     
     const time = new Date(message.sent_at).toLocaleTimeString('ru-RU', {
         hour: '2-digit',
@@ -261,6 +254,145 @@ function appendMessage(message, scroll = true) {
     }
 }
 
+// ===== КОПИРОВАНИЕ ПРИ ДОЛГОМ НАЖАТИИ =====
+function initCopyOnLongPress() {
+    let pressTimer;
+    let pressedMessage = null;
+    
+    document.addEventListener('touchstart', (e) => {
+        const messageEl = e.target.closest('.message');
+        if (!messageEl) return;
+        
+        pressedMessage = messageEl;
+        
+        pressTimer = setTimeout(() => {
+            if (pressedMessage) {
+                const messageText = pressedMessage.querySelector('.message-text');
+                if (messageText) {
+                    const text = messageText.textContent;
+                    copyToClipboard(text);
+                    
+                    API.showCheckToast('Скопировано');
+                    
+                    pressedMessage.classList.add('message-copied');
+                    setTimeout(() => {
+                        pressedMessage.classList.remove('message-copied');
+                    }, 500);
+                }
+            }
+        }, 500);
+    });
+    
+    document.addEventListener('touchend', () => {
+        clearTimeout(pressTimer);
+        pressedMessage = null;
+    });
+    
+    document.addEventListener('touchmove', () => {
+        clearTimeout(pressTimer);
+        pressedMessage = null;
+    });
+}
+
+// ===== КОПИРОВАНИЕ В БУФЕР =====
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {
+            fallbackCopy(text);
+        });
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+}
+
+// ===== УДАЛЕНИЕ СООБЩЕНИЯ =====
+async function deleteMessage(messageId) {
+    try {
+        await API.messages.delete(messageId);
+        
+        const messageEl = document.querySelector(`.message[data-message-id="${messageId}"]`);
+        if (messageEl) messageEl.remove();
+        
+        if (ws?.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: 'delete',
+                chatId: currentChatId,
+                messageId: messageId
+            }));
+        }
+        
+        API.showCheckToast('Удалено');
+    } catch (error) {
+        console.error('❌ Ошибка удаления:', error);
+        API.showToast('Не удалось удалить сообщение', 'error');
+    }
+}
+
+// ===== ЗАЖАТИЕ ДЛЯ УДАЛЕНИЯ =====
+function initMessageLongPress() {
+    let pressTimer;
+    let pressedMessage = null;
+    
+    document.addEventListener('touchstart', (e) => {
+        const messageEl = e.target.closest('.message');
+        if (!messageEl) return;
+        
+        if (messageEl.classList.contains('own')) return;
+        
+        pressedMessage = messageEl;
+        
+        pressTimer = setTimeout(() => {
+            if (pressedMessage) {
+                const messageId = pressedMessage.dataset.messageId;
+                showDeleteConfirm(messageId);
+            }
+        }, 500);
+    });
+    
+    document.addEventListener('touchend', () => {
+        clearTimeout(pressTimer);
+        pressedMessage = null;
+    });
+    
+    document.addEventListener('touchmove', () => {
+        clearTimeout(pressTimer);
+        pressedMessage = null;
+    });
+}
+
+function showDeleteConfirm(messageId) {
+    const overlay = document.createElement('div');
+    overlay.className = 'message-delete-overlay';
+    overlay.innerHTML = `
+        <div class="delete-confirm">
+            <p>Удалить сообщение для всех?</p>
+            <div class="delete-confirm-buttons">
+                <button class="delete-confirm-btn cancel">Отмена</button>
+                <button class="delete-confirm-btn delete">Удалить</button>
+            </div>
+        </div>
+    `;
+    
+    overlay.querySelector('.cancel').onclick = () => overlay.remove();
+    overlay.querySelector('.delete').onclick = async () => {
+        await deleteMessage(messageId);
+        overlay.remove();
+    };
+    
+    document.body.appendChild(overlay);
+}
+
 // ===== ОТПРАВКА СООБЩЕНИЯ =====
 async function sendMessage() {
     const input = document.getElementById('messageInput');
@@ -289,77 +421,6 @@ async function sendMessage() {
         API.showToast('Не удалось отправить сообщение', 'error');
         input.value = content;
     }
-}
-
-// ===== УДАЛЕНИЕ СООБЩЕНИЯ =====
-async function deleteMessage(messageId) {
-    try {
-        await API.messages.delete(messageId);
-        
-        const messageEl = document.querySelector(`.message[data-message-id="${messageId}"]`);
-        if (messageEl) messageEl.remove();
-        
-        if (ws?.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                type: 'delete',
-                chatId: currentChatId,
-                messageId: messageId
-            }));
-        }
-        
-        API.showToast('Сообщение удалено', 'success');
-    } catch (error) {
-        console.error('❌ Ошибка удаления:', error);
-        API.showToast('Не удалось удалить сообщение', 'error');
-    }
-}
-
-// ===== ЗАЖАТИЕ СООБЩЕНИЯ =====
-function initMessageLongPress() {
-    let pressTimer;
-    
-    document.addEventListener('touchstart', (e) => {
-        const messageEl = e.target.closest('.message');
-        if (!messageEl) return;
-        
-        // Только чужие сообщения можно удалять
-        if (messageEl.classList.contains('own')) return;
-        
-        pressTimer = setTimeout(() => {
-            const messageId = messageEl.dataset.messageId;
-            showDeleteConfirm(messageId);
-        }, 500);
-    });
-    
-    document.addEventListener('touchend', () => {
-        clearTimeout(pressTimer);
-    });
-    
-    document.addEventListener('touchmove', () => {
-        clearTimeout(pressTimer);
-    });
-}
-
-function showDeleteConfirm(messageId) {
-    const overlay = document.createElement('div');
-    overlay.className = 'message-delete-overlay';
-    overlay.innerHTML = `
-        <div class="delete-confirm">
-            <p>Удалить сообщение для всех?</p>
-            <div class="delete-confirm-buttons">
-                <button class="delete-confirm-btn cancel">Отмена</button>
-                <button class="delete-confirm-btn delete">Удалить</button>
-            </div>
-        </div>
-    `;
-    
-    overlay.querySelector('.cancel').onclick = () => overlay.remove();
-    overlay.querySelector('.delete').onclick = async () => {
-        await deleteMessage(messageId);
-        overlay.remove();
-    };
-    
-    document.body.appendChild(overlay);
 }
 
 // ===== ВЕБСОКЕТ =====
@@ -472,7 +533,6 @@ function initEventListeners() {
         });
     }
     
-    // Редактирование названия чата
     const editNameItem = document.getElementById('editChatNameItem');
     if (editNameItem) {
         editNameItem.addEventListener('click', () => {
@@ -484,7 +544,6 @@ function initEventListeners() {
         });
     }
     
-    // Редактирование ID чата
     const editIdItem = document.getElementById('editChatIdItem');
     if (editIdItem) {
         editIdItem.addEventListener('click', () => {
@@ -496,7 +555,6 @@ function initEventListeners() {
         });
     }
     
-    // Сохранение названия
     const saveNameBtn = document.getElementById('saveChatNameBtn');
     if (saveNameBtn) {
         saveNameBtn.addEventListener('click', async () => {
@@ -508,14 +566,13 @@ function initEventListeners() {
                 currentChat.name = newName;
                 await loadChatInfo();
                 document.getElementById('editNameModal')?.classList.remove('active');
-                API.showToast('Название обновлено', 'success');
+                API.showCheckToast('Название обновлено');
             } catch (error) {
                 API.showToast('Ошибка обновления', 'error');
             }
         });
     }
     
-    // Сохранение ID
     const saveIdBtn = document.getElementById('saveChatIdBtn');
     if (saveIdBtn) {
         saveIdBtn.addEventListener('click', async () => {
@@ -525,20 +582,22 @@ function initEventListeners() {
             if (!newId.startsWith('#')) {
                 newId = '#' + newId;
             }
+            if (newId.startsWith('##')) {
+                newId = '#' + newId.slice(2);
+            }
             
             try {
                 await API.chats.updateSettings(currentChatId, { chatId: newId });
                 currentChat.chat_id = newId;
                 await loadChatInfo();
                 document.getElementById('editIdModal')?.classList.remove('active');
-                API.showToast('ID чата обновлен', 'success');
+                API.showCheckToast('ID чата обновлен');
             } catch (error) {
                 API.showToast('Ошибка обновления', 'error');
             }
         });
     }
     
-    // Удаление чата
     const deleteChatItem = document.getElementById('deleteChatItem');
     if (deleteChatItem) {
         deleteChatItem.addEventListener('click', async () => {
@@ -553,7 +612,6 @@ function initEventListeners() {
         });
     }
     
-    // Выход из чата
     const leaveChatItem = document.getElementById('leaveChatItem');
     if (leaveChatItem) {
         leaveChatItem.addEventListener('click', async () => {
@@ -568,7 +626,6 @@ function initEventListeners() {
         });
     }
     
-    // Закрытие модалок
     document.querySelectorAll('.modal .close, .modal .cancel-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const modal = btn.closest('.modal');
@@ -762,6 +819,7 @@ function escapeHtml(text) {
 window.sendMessage = sendMessage;
 window.deleteMessage = deleteMessage;
 window.kickMember = kickMember;
+
 window.openImagePreview = function(url) {
     const modal = document.getElementById('imagePreviewModal');
     const img = document.getElementById('previewImage');
@@ -786,25 +844,22 @@ window.openImagePreview = function(url) {
     });
 };
 
-// Добавляем метод getMembers в API если его нет
-if (!API.chats.getMembers) {
-    API.chats.getMembers = async (chatId) => {
-        return API.request(`/api/chats/${chatId}/members`);
-    };
-}
+window.leaveChat = async function() {
+    if (!confirm('Покинуть чат?')) return;
+    
+    try {
+        await API.chats.leave(currentChatId);
+        window.location.href = '/dashboard.html';
+    } catch (error) {
+        console.error('❌ Ошибка выхода из чата');
+        API.showToast('Не удалось покинуть чат', 'error');
+    }
+};
 
-if (!API.chats.kickMember) {
-    API.chats.kickMember = async (chatId, userId) => {
-        return API.request(`/api/chats/${chatId}/members/${userId}`, {
-            method: 'DELETE'
-        });
-    };
-}
+window.showMembers = function() {
+    console.log('👥 Показ участников');
+};
 
-if (!API.chats.delete) {
-    API.chats.delete = async (chatId) => {
-        return API.request(`/api/chats/${chatId}`, {
-            method: 'DELETE'
-        });
-    };
-}
+window.showSettings = function() {
+    console.log('⚙️ Настройки чата');
+};
