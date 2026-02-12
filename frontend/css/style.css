@@ -754,7 +754,7 @@ body {
 .message-nickname {
     font-weight: 600;
     font-size: 14px;
-    color: rgb(180, 180, 180);
+    color: rgb(156, 143, 213);
 }
 
 .message-time {
@@ -1384,16 +1384,14 @@ body {
 }
 
 /* ===== ПОЛНОЕ УБРАНСТВО ОБВОДОК ===== */
-/* .chat-name,
+.chat-name,
 .chat-header .chat-name,
 .chat-info .chat-name,
 .chat-item .chat-name {
-    outline: none !important;    РАСКОМЕНТИРОВАТЬ ЕСЛИ НЕООБХОДИМО
     border: none !important;
     box-shadow: none !important;
     text-decoration: none !important;
-    background: none !important;
-} */
+}
 
 .chat-item:focus,
 .chat-item:focus-within,
