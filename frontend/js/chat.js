@@ -6,6 +6,7 @@ let currentUser = null;
 let currentChat = null;
 let allMessagesLoaded = false;
 let loadingMessages = false;
+let pushEnabled = false;
 
 let mediaRecorder = null;
 let audioChunks = [];
@@ -36,9 +37,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initVoiceRecording();
     initMessageLongPress();
     initCopyOnLongPress();
-    
-    // ===== ПОДПИСКА НА УВЕДОМЛЕНИЯ =====
-    await subscribeToPush();
+    initNotificationButton();
+    checkPushStatus();
 });
 
 // ===== ПРОФИЛЬ =====
@@ -822,41 +822,117 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ===== УВЕДОМЛЕНИЯ — КНОПКА СПРАВА =====
+function initNotificationButton() {
+    const headerRight = document.querySelector('.chat-header-right');
+    if (!headerRight) return;
+    
+    // Создаём кнопку уведомлений
+    const notifBtn = document.createElement('button');
+    notifBtn.id = 'notificationButton';
+    notifBtn.className = 'notification-button';
+    notifBtn.setAttribute('aria-label', 'Уведомления');
+    notifBtn.innerHTML = '🔕';
+    
+    // Добавляем перед кнопкой меню
+    const menuBtn = headerRight.querySelector('.menu-button');
+    if (menuBtn) {
+        headerRight.insertBefore(notifBtn, menuBtn);
+    } else {
+        headerRight.appendChild(notifBtn);
+    }
+    
+    notifBtn.addEventListener('click', toggleNotifications);
+}
+
+// ===== ПРОВЕРКА СТАТУСА =====
+async function checkPushStatus() {
+    try {
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+            updateNotificationButton(false);
+            return;
+        }
+        
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        const isSubscribed = !!subscription;
+        
+        pushEnabled = isSubscribed;
+        updateNotificationButton(isSubscribed);
+        
+    } catch (error) {
+        console.error('❌ Ошибка проверки статуса:', error);
+        updateNotificationButton(false);
+    }
+}
+
+// ===== ОБНОВЛЕНИЕ КНОПКИ =====
+function updateNotificationButton(enabled) {
+    const notifBtn = document.getElementById('notificationButton');
+    if (!notifBtn) return;
+    
+    if (enabled) {
+        notifBtn.innerHTML = '🔔';
+        notifBtn.classList.add('active');
+        notifBtn.setAttribute('aria-label', 'Уведомления включены');
+    } else {
+        notifBtn.innerHTML = '🔕';
+        notifBtn.classList.remove('active');
+        notifBtn.setAttribute('aria-label', 'Уведомления выключены');
+    }
+}
+
+// ===== ПЕРЕКЛЮЧЕНИЕ УВЕДОМЛЕНИЙ =====
+async function toggleNotifications() {
+    try {
+        if (pushEnabled) {
+            // Отключаем уведомления
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+            
+            if (subscription) {
+                await fetch('/api/push/unsubscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: subscription.endpoint }),
+                    credentials: 'include'
+                });
+                
+                await subscription.unsubscribe();
+            }
+            
+            pushEnabled = false;
+            updateNotificationButton(false);
+            API.showCheckToast('🔕 Уведомления отключены');
+            
+        } else {
+            // Включаем уведомления
+            const perm = await Notification.requestPermission();
+            
+            if (perm === 'granted') {
+                await subscribeToPush();
+                pushEnabled = true;
+                updateNotificationButton(true);
+                API.showCheckToast('🔔 Уведомления включены');
+            } else {
+                API.showToast('❌ Нет разрешения на уведомления', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('❌ Ошибка переключения уведомлений:', error);
+        API.showToast('❌ Ошибка', 'error');
+    }
+}
+
 // ===== ПОДПИСКА НА УВЕДОМЛЕНИЯ =====
 async function subscribeToPush() {
     try {
-        // Проверяем поддержку
-        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-            console.log('❌ Push уведомления не поддерживаются браузером');
-            return;
-        }
-
-        // Проверяем, есть ли уже подписка
+        console.log('📨 Создание push-подписки...');
+        
         const registration = await navigator.serviceWorker.ready;
-        let subscription = await registration.pushManager.getSubscription();
-        
-        if (subscription) {
-            console.log('✅ Уже подписаны на уведомления');
-            return;
-        }
-
-        // Запрашиваем разрешение
-        console.log('🔔 Запрос разрешения на уведомления...');
-        const permission = await Notification.requestPermission();
-        
-        if (permission !== 'granted') {
-            console.log('❌ Нет разрешения на уведомления');
-            return;
-        }
-
-        // Получаем публичный ключ с сервера
-        console.log('🔑 Получение VAPID ключа...');
         const keyRes = await fetch('/api/push/vapid-public-key');
-        if (!keyRes.ok) throw new Error('Не удалось получить ключ');
-        
         const { publicKey } = await keyRes.json();
         
-        // Конвертируем ключ из base64 в Uint8Array
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
             const base64 = (base64String + padding)
@@ -870,50 +946,25 @@ async function subscribeToPush() {
             return outputArray;
         }
 
-        // Создаём подписку
-        console.log('📨 Создание push-подписки...');
-        subscription = await registration.pushManager.subscribe({
+        const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(publicKey)
         });
 
-        // Отправляем подписку на сервер
-        console.log('📤 Отправка подписки на сервер...');
         const response = await fetch('/api/push/subscribe', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(subscription),
             credentials: 'include'
         });
 
-        if (response.ok) {
-            console.log('✅ Успешно подписались на уведомления!');
-            API.showCheckToast('🔔 Уведомления включены');
-        } else {
-            throw new Error('Ошибка при отправке подписки');
-        }
-
+        if (!response.ok) throw new Error('Ошибка подписки');
+        
+        console.log('✅ Успешно подписались!');
+        
     } catch (error) {
-        console.error('❌ Ошибка подписки на push-уведомления:', error);
-    }
-}
-
-// ===== ТЕСТОВОЕ УВЕДОМЛЕНИЕ =====
-async function testPush() {
-    try {
-        const response = await fetch('/api/push/test', {
-            method: 'POST',
-            credentials: 'include'
-        });
-        const data = await response.json();
-        console.log('📨 Тест уведомлений:', data);
-        if (response.ok) {
-            API.showCheckToast('🔔 Тестовое уведомление отправлено');
-        }
-    } catch (error) {
-        console.error('❌ Ошибка теста уведомлений:', error);
+        console.error('❌ Ошибка подписки:', error);
+        throw error;
     }
 }
 
@@ -921,10 +972,12 @@ async function testPush() {
 window.sendMessage = sendMessage;
 window.deleteMessage = deleteMessage;
 window.kickMember = kickMember;
-window.testPush = testPush;
-window.subscribeToPush = subscribeToPush;
+window.openImagePreview = openImagePreview;
+window.leaveChat = leaveChat;
+window.showMembers = showMembers;
+window.showSettings = showSettings;
 
-window.openImagePreview = function(url) {
+function openImagePreview(url) {
     const modal = document.getElementById('imagePreviewModal');
     const img = document.getElementById('previewImage');
     if (!modal || !img) return;
@@ -946,24 +999,24 @@ window.openImagePreview = function(url) {
             img.src = '';
         }
     });
-};
+}
 
-window.leaveChat = async function() {
+function leaveChat() {
     if (!confirm('Покинуть чат?')) return;
     
     try {
-        await API.chats.leave(currentChatId);
+        API.chats.leave(currentChatId);
         window.location.href = '/dashboard.html';
     } catch (error) {
         console.error('❌ Ошибка выхода из чата');
         API.showToast('Не удалось покинуть чат', 'error');
     }
-};
+}
 
-window.showMembers = function() {
+function showMembers() {
     console.log('👥 Показ участников');
-};
+}
 
-window.showSettings = function() {
+function showSettings() {
     console.log('⚙️ Настройки чата');
-};
+}
