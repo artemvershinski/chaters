@@ -11,6 +11,9 @@ const chatRoutes = require('./routes/chats');
 const messageRoutes = require('./routes/messages');
 const WebSocketServer = require('./websocket');
 
+// ===== PUSH УВЕДОМЛЕНИЯ =====
+const { pushRouter, sendPushNotificationToChat } = require('./routes/push');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -29,28 +32,21 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-// ========== ЖЕСТКАЯ ФИКСАЦИЯ ПУТЕЙ ==========
-const PROJECT_ROOT = path.join(__dirname, '..');  // /opt/render/project/
-const FRONTEND_PATH = path.join(PROJECT_ROOT, 'frontend');
-const UPLOADS_PATH = path.join(PROJECT_ROOT, 'uploads');
-
-console.log('📁 Project root:', PROJECT_ROOT);
-console.log('📁 Frontend path:', FRONTEND_PATH);
-console.log('📁 Uploads path:', UPLOADS_PATH);
-
-// Раздаем статику
+// ========== СТАТИКА ==========
+const FRONTEND_PATH = path.join(__dirname, '../frontend');
 app.use(express.static(FRONTEND_PATH));
 
-// Создаем папку для загрузок
-if (!fs.existsSync(UPLOADS_PATH)) {
-    fs.mkdirSync(UPLOADS_PATH, { recursive: true });
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
 }
-app.use('/uploads', express.static(UPLOADS_PATH));
+app.use('/uploads', express.static(uploadsDir));
 
 // ========== API МАРШРУТЫ ==========
 app.use('/api', authRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', messageRoutes);
+app.use('/api', pushRouter);  // 👈 PUSH API
 
 // ========== ПИНГ И HEALTH ==========
 app.get('/ping', (req, res) => {
@@ -161,6 +157,28 @@ async function initTables() {
         `);
         
         console.log('✅ Таблицы готовы');
+        
+        // ===== ИНИЦИАЛИЗАЦИЯ ТАБЛИЦЫ PUSH =====
+        try {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS push_subscriptions (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    endpoint TEXT UNIQUE NOT NULL,
+                    p256dh TEXT NOT NULL,
+                    auth TEXT NOT NULL,
+                    user_agent TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX IF NOT EXISTS idx_push_user_id ON push_subscriptions(user_id);
+                CREATE INDEX IF NOT EXISTS idx_push_endpoint ON push_subscriptions(endpoint);
+            `);
+            console.log('✅ Push таблица готова');
+        } catch (pushError) {
+            console.error('❌ Push table error:', pushError.message);
+        }
+        
     } catch (err) {
         console.error('❌ Ошибка инициализации БД:', err.message);
     }
@@ -172,9 +190,13 @@ initTables().then(() => {
         console.log(`🚀 Chaters server running on port ${PORT}`);
         console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`💾 Database: ${process.env.DATABASE_URL ? 'configured' : 'missing'}`);
+        console.log(`🔔 Push: ${process.env.VAPID_PUBLIC_KEY ? 'configured' : 'missing VAPID keys'}`);
     });
 
     const wss = new WebSocketServer(server);
+
+    // Делаем функцию отправки уведомлений доступной в WebSocket
+    wss.sendPushNotification = sendPushNotificationToChat;
 
     process.on('SIGTERM', () => {
         console.log('SIGTERM received, closing server...');
