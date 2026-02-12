@@ -513,7 +513,7 @@ function initEventListeners() {
     
     if (chatHeader) {
         chatHeader.addEventListener('click', (e) => {
-            if (e.target.closest('.back-button')) return;
+            if (e.target.closest('.back-button') || e.target.closest('.notification-button')) return;
             
             if (menuOverlay) {
                 menuOverlay.classList.remove('hidden');
@@ -827,25 +827,26 @@ function initNotificationButton() {
     const headerRight = document.querySelector('.chat-header-right');
     if (!headerRight) return;
     
-    // Создаём кнопку уведомлений
+    const oldBtn = document.getElementById('notificationButton');
+    if (oldBtn) oldBtn.remove();
+    
     const notifBtn = document.createElement('button');
     notifBtn.id = 'notificationButton';
     notifBtn.className = 'notification-button';
-    notifBtn.setAttribute('aria-label', 'Уведомления');
-    notifBtn.innerHTML = '🔕';
+    notifBtn.setAttribute('aria-label', 'Уведомления выключены');
+    notifBtn.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.5 5 13 4 14H20C19 13 18 11.5 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z" fill="currentColor"/>
+            <path d="M4 4L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    `;
     
-    // Добавляем перед кнопкой меню
-    const menuBtn = headerRight.querySelector('.menu-button');
-    if (menuBtn) {
-        headerRight.insertBefore(notifBtn, menuBtn);
-    } else {
-        headerRight.appendChild(notifBtn);
-    }
-    
+    headerRight.appendChild(notifBtn);
     notifBtn.addEventListener('click', toggleNotifications);
 }
 
-// ===== ПРОВЕРКА СТАТУСА =====
+// ===== ПРОВЕРКА СТАТУСА ПОДПИСКИ =====
 async function checkPushStatus() {
     try {
         if (!('Notification' in window) || !('serviceWorker' in navigator)) {
@@ -872,13 +873,24 @@ function updateNotificationButton(enabled) {
     if (!notifBtn) return;
     
     if (enabled) {
-        notifBtn.innerHTML = '🔔';
         notifBtn.classList.add('active');
         notifBtn.setAttribute('aria-label', 'Уведомления включены');
+        notifBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.5 5 13 4 14H20C19 13 18 11.5 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z" fill="currentColor"/>
+            </svg>
+        `;
     } else {
-        notifBtn.innerHTML = '🔕';
         notifBtn.classList.remove('active');
         notifBtn.setAttribute('aria-label', 'Уведомления выключены');
+        notifBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.5 5 13 4 14H20C19 13 18 11.5 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z" fill="currentColor"/>
+                <path d="M4 4L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        `;
     }
 }
 
@@ -886,7 +898,6 @@ function updateNotificationButton(enabled) {
 async function toggleNotifications() {
     try {
         if (pushEnabled) {
-            // Отключаем уведомления
             const registration = await navigator.serviceWorker.ready;
             const subscription = await registration.pushManager.getSubscription();
             
@@ -906,7 +917,6 @@ async function toggleNotifications() {
             API.showCheckToast('🔕 Уведомления отключены');
             
         } else {
-            // Включаем уведомления
             const perm = await Notification.requestPermission();
             
             if (perm === 'granted') {
@@ -972,7 +982,6 @@ async function subscribeToPush() {
 window.sendMessage = sendMessage;
 window.deleteMessage = deleteMessage;
 window.kickMember = kickMember;
-window.openImagePreview = openImagePreview;
 window.leaveChat = leaveChat;
 window.showMembers = showMembers;
 window.showSettings = showSettings;
@@ -1000,6 +1009,7 @@ function openImagePreview(url) {
         }
     });
 }
+window.openImagePreview = openImagePreview;
 
 function leaveChat() {
     if (!confirm('Покинуть чат?')) return;
