@@ -139,7 +139,7 @@ async function kickMember(userId) {
     try {
         await API.chats.kickMember(currentChatId, userId);
         await loadMembers();
-        API.showCheckToast('Участник исключен', 'success');
+        API.showCheckToast('Участник исключен');
     } catch (error) {
         console.error('❌ Ошибка исключения:', error);
         API.showToast('Не удалось исключить участника', 'error');
@@ -278,9 +278,7 @@ function initCopyOnLongPress() {
                 if (messageText) {
                     const text = messageText.textContent;
                     copyToClipboard(text);
-                    
                     API.showCheckToast('Скопировано');
-                    
                     pressedMessage.classList.add('message-copied');
                     setTimeout(() => {
                         pressedMessage.classList.remove('message-copied');
@@ -304,9 +302,7 @@ function initCopyOnLongPress() {
 // ===== КОПИРОВАНИЕ В БУФЕР =====
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).catch(() => {
-            fallbackCopy(text);
-        });
+        navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
     } else {
         fallbackCopy(text);
     }
@@ -327,7 +323,6 @@ function fallbackCopy(text) {
 async function deleteMessage(messageId) {
     try {
         await API.messages.delete(messageId);
-        
         const messageEl = document.querySelector(`.message[data-message-id="${messageId}"]`);
         if (messageEl) messageEl.remove();
         
@@ -338,7 +333,6 @@ async function deleteMessage(messageId) {
                 messageId: messageId
             }));
         }
-        
         API.showCheckToast('Удалено');
     } catch (error) {
         console.error('❌ Ошибка удаления:', error);
@@ -354,7 +348,6 @@ function initMessageLongPress() {
     document.addEventListener('touchstart', (e) => {
         const messageEl = e.target.closest('.message');
         if (!messageEl) return;
-        
         if (messageEl.classList.contains('own')) return;
         
         pressedMessage = messageEl;
@@ -404,7 +397,6 @@ function showDeleteConfirm(messageId) {
 async function sendMessage() {
     const input = document.getElementById('messageInput');
     const content = input.value.trim();
-    
     if (!content) return;
     
     input.value = '';
@@ -422,7 +414,6 @@ async function sendMessage() {
                 message: message
             }));
         }
-        
     } catch (error) {
         console.error('❌ Ошибка отправки:', error);
         API.showToast('Не удалось отправить сообщение', 'error');
@@ -448,7 +439,6 @@ function initWebSocket() {
     ws.onmessage = (event) => {
         try {
             const data = JSON.parse(event.data);
-            
             if (data.type === 'message' && data.message) {
                 appendMessage(data.message);
             } else if (data.type === 'message_deleted') {
@@ -491,7 +481,6 @@ function initEventListeners() {
         input.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
-            
             if (ws?.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'typing',
@@ -501,10 +490,7 @@ function initEventListeners() {
         });
     }
     
-    if (sendBtn) {
-        sendBtn.addEventListener('click', sendMessage);
-    }
-    
+    if (sendBtn) sendBtn.addEventListener('click', sendMessage);
     if (backBtn) {
         backBtn.addEventListener('click', () => {
             window.location.href = '/dashboard.html';
@@ -514,7 +500,6 @@ function initEventListeners() {
     if (chatHeader) {
         chatHeader.addEventListener('click', (e) => {
             if (e.target.closest('.back-button') || e.target.closest('.notification-button')) return;
-            
             if (menuOverlay) {
                 menuOverlay.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
@@ -545,9 +530,7 @@ function initEventListeners() {
         editNameItem.addEventListener('click', () => {
             document.getElementById('editNameModal')?.classList.add('active');
             const input = document.getElementById('editChatNameInput');
-            if (input && currentChat) {
-                input.value = currentChat.name;
-            }
+            if (input && currentChat) input.value = currentChat.name;
         });
     }
     
@@ -556,9 +539,7 @@ function initEventListeners() {
         editIdItem.addEventListener('click', () => {
             document.getElementById('editIdModal')?.classList.add('active');
             const input = document.getElementById('editChatIdInput');
-            if (input && currentChat) {
-                input.value = currentChat.chat_id;
-            }
+            if (input && currentChat) input.value = currentChat.chat_id;
         });
     }
     
@@ -567,7 +548,6 @@ function initEventListeners() {
         saveNameBtn.addEventListener('click', async () => {
             const newName = document.getElementById('editChatNameInput')?.value.trim();
             if (!newName) return;
-            
             try {
                 await API.chats.updateSettings(currentChatId, { name: newName });
                 currentChat.name = newName;
@@ -585,14 +565,8 @@ function initEventListeners() {
         saveIdBtn.addEventListener('click', async () => {
             let newId = document.getElementById('editChatIdInput')?.value.trim();
             if (!newId) return;
-            
-            if (!newId.startsWith('#')) {
-                newId = '#' + newId;
-            }
-            if (newId.startsWith('##')) {
-                newId = '#' + newId.slice(2);
-            }
-            
+            if (!newId.startsWith('#')) newId = '#' + newId;
+            if (newId.startsWith('##')) newId = '#' + newId.slice(2);
             try {
                 await API.chats.updateSettings(currentChatId, { chatId: newId });
                 currentChat.chat_id = newId;
@@ -608,8 +582,7 @@ function initEventListeners() {
     const deleteChatItem = document.getElementById('deleteChatItem');
     if (deleteChatItem) {
         deleteChatItem.addEventListener('click', async () => {
-            if (!confirm('Удалить чат навсегда? Это действие нельзя отменить.')) return;
-            
+            if (!confirm('Удалить чат навсегда?')) return;
             try {
                 await API.chats.delete(currentChatId);
                 window.location.href = '/dashboard.html';
@@ -623,7 +596,6 @@ function initEventListeners() {
     if (leaveChatItem) {
         leaveChatItem.addEventListener('click', async () => {
             if (!confirm('Покинуть чат?')) return;
-            
             try {
                 await API.chats.leave(currentChatId);
                 window.location.href = '/dashboard.html';
@@ -645,23 +617,18 @@ function initEventListeners() {
 function initFileUpload() {
     const attachBtn = document.getElementById('attachButton');
     const fileInput = document.getElementById('fileInput');
-    
     if (!attachBtn || !fileInput) return;
     
-    attachBtn.addEventListener('click', () => {
-        fileInput.click();
-    });
+    attachBtn.addEventListener('click', () => fileInput.click());
     
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
         
         API.showLoader();
-        
         try {
             const message = await API.messages.sendFile(currentChatId, file);
             appendMessage(message);
-            
             if (ws?.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'message',
@@ -669,7 +636,6 @@ function initFileUpload() {
                     message: message
                 }));
             }
-            
             fileInput.value = '';
         } catch (error) {
             console.error('❌ Ошибка отправки файла:', error);
@@ -688,7 +654,6 @@ function initVoiceRecording() {
     const wrapper = document.getElementById('messageInputWrapper');
     
     if (!input || !sendBtn || !voiceBtn || !wrapper) return;
-    
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         voiceBtn.style.display = 'none';
         return;
@@ -696,7 +661,6 @@ function initVoiceRecording() {
     
     input.addEventListener('input', function() {
         const isEmpty = this.value.trim() === '';
-        
         if (isEmpty) {
             sendBtn.classList.add('hidden');
             voiceBtn.classList.remove('hidden');
@@ -729,13 +693,10 @@ async function startRecording(e) {
     
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
         mediaRecorder = new MediaRecorder(stream);
         audioChunks = [];
         
-        mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
-        };
+        mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
         
         mediaRecorder.onstop = async () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
@@ -744,7 +705,6 @@ async function startRecording(e) {
             try {
                 const message = await API.messages.sendFile(currentChatId, audioFile);
                 appendMessage(message);
-                
                 if (ws?.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({
                         type: 'message',
@@ -766,7 +726,6 @@ async function startRecording(e) {
         isRecording = true;
         recordingStartTime = Date.now();
         voiceBtn.classList.add('recording');
-        
     } catch (error) {
         console.error('❌ Нет доступа к микрофону');
         API.showToast('Микрофон недоступен', 'error');
@@ -787,10 +746,8 @@ function stopRecording() {
 function showTypingIndicator(nickname) {
     const indicator = document.getElementById('typingIndicator');
     if (!indicator) return;
-    
     indicator.textContent = `${nickname} печатает...`;
     indicator.classList.remove('hidden');
-    
     clearTimeout(window.typingTimeout);
     window.typingTimeout = setTimeout(() => {
         indicator.classList.add('hidden');
@@ -800,9 +757,7 @@ function showTypingIndicator(nickname) {
 // ===== СКРОЛЛ =====
 function scrollToBottom() {
     const container = document.getElementById('messagesContainer');
-    if (container) {
-        container.scrollTop = container.scrollHeight;
-    }
+    if (container) container.scrollTop = container.scrollHeight;
 }
 
 // ===== ЛОУДЕР =====
@@ -824,8 +779,20 @@ function escapeHtml(text) {
 
 // ===== УВЕДОМЛЕНИЯ — КНОПКА СПРАВА =====
 function initNotificationButton() {
-    const headerRight = document.querySelector('.chat-header-right');
-    if (!headerRight) return;
+    console.log('🔔 Инициализация кнопки уведомлений');
+    
+    let headerRight = document.querySelector('.chat-header-right');
+    if (!headerRight) {
+        console.error('❌ .chat-header-right не найден, создаём');
+        const chatHeader = document.querySelector('.chat-header');
+        if (chatHeader) {
+            headerRight = document.createElement('div');
+            headerRight.className = 'chat-header-right';
+            chatHeader.appendChild(headerRight);
+        } else {
+            return;
+        }
+    }
     
     const oldBtn = document.getElementById('notificationButton');
     if (oldBtn) oldBtn.remove();
@@ -834,16 +801,16 @@ function initNotificationButton() {
     notifBtn.id = 'notificationButton';
     notifBtn.className = 'notification-button';
     notifBtn.setAttribute('aria-label', 'Уведомления выключены');
-    notifBtn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.5 5 13 4 14H20C19 13 18 11.5 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z" fill="currentColor"/>
-            <path d="M4 4L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-    `;
+    notifBtn.innerHTML = '🔕';
     
     headerRight.appendChild(notifBtn);
-    notifBtn.addEventListener('click', toggleNotifications);
+    console.log('✅ Кнопка уведомлений добавлена');
+    
+    notifBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleNotifications(e);
+    });
 }
 
 // ===== ПРОВЕРКА СТАТУСА ПОДПИСКИ =====
@@ -860,7 +827,7 @@ async function checkPushStatus() {
         
         pushEnabled = isSubscribed;
         updateNotificationButton(isSubscribed);
-        
+        console.log('🔔 Статус уведомлений:', isSubscribed ? 'ВКЛ' : 'ВЫКЛ');
     } catch (error) {
         console.error('❌ Ошибка проверки статуса:', error);
         updateNotificationButton(false);
@@ -870,34 +837,32 @@ async function checkPushStatus() {
 // ===== ОБНОВЛЕНИЕ КНОПКИ =====
 function updateNotificationButton(enabled) {
     const notifBtn = document.getElementById('notificationButton');
-    if (!notifBtn) return;
+    if (!notifBtn) {
+        console.error('❌ Кнопка уведомлений не найдена');
+        return;
+    }
     
     if (enabled) {
         notifBtn.classList.add('active');
         notifBtn.setAttribute('aria-label', 'Уведомления включены');
-        notifBtn.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.5 5 13 4 14H20C19 13 18 11.5 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z" fill="currentColor"/>
-            </svg>
-        `;
+        notifBtn.innerHTML = '🔔';
+        console.log('🔔 Кнопка обновлена: ВКЛ');
     } else {
         notifBtn.classList.remove('active');
         notifBtn.setAttribute('aria-label', 'Уведомления выключены');
-        notifBtn.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.5 5 13 4 14H20C19 13 18 11.5 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z" fill="currentColor"/>
-                <path d="M4 4L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-        `;
+        notifBtn.innerHTML = '🔕';
+        console.log('🔕 Кнопка обновлена: ВЫКЛ');
     }
 }
 
 // ===== ПЕРЕКЛЮЧЕНИЕ УВЕДОМЛЕНИЙ =====
-async function toggleNotifications() {
+async function toggleNotifications(e) {
+    if (e) e.preventDefault();
+    console.log('🔔 Переключение уведомлений, текущий статус:', pushEnabled ? 'ВКЛ' : 'ВЫКЛ');
+    
     try {
         if (pushEnabled) {
+            // ОТКЛЮЧАЕМ
             const registration = await navigator.serviceWorker.ready;
             const subscription = await registration.pushManager.getSubscription();
             
@@ -908,24 +873,29 @@ async function toggleNotifications() {
                     body: JSON.stringify({ endpoint: subscription.endpoint }),
                     credentials: 'include'
                 });
-                
                 await subscription.unsubscribe();
             }
             
             pushEnabled = false;
             updateNotificationButton(false);
             API.showCheckToast('🔕 Уведомления отключены');
+            console.log('🔕 Уведомления отключены');
             
         } else {
+            // ВКЛЮЧАЕМ
+            console.log('🔔 Запрос разрешения...');
             const perm = await Notification.requestPermission();
+            console.log('🔔 Разрешение:', perm);
             
             if (perm === 'granted') {
                 await subscribeToPush();
                 pushEnabled = true;
                 updateNotificationButton(true);
                 API.showCheckToast('🔔 Уведомления включены');
+                console.log('🔔 Уведомления включены');
             } else {
                 API.showToast('❌ Нет разрешения на уведомления', 'error');
+                console.error('❌ Нет разрешения');
             }
         }
     } catch (error) {
@@ -971,7 +941,6 @@ async function subscribeToPush() {
         if (!response.ok) throw new Error('Ошибка подписки');
         
         console.log('✅ Успешно подписались!');
-        
     } catch (error) {
         console.error('❌ Ошибка подписки:', error);
         throw error;
@@ -1013,7 +982,6 @@ window.openImagePreview = openImagePreview;
 
 function leaveChat() {
     if (!confirm('Покинуть чат?')) return;
-    
     try {
         API.chats.leave(currentChatId);
         window.location.href = '/dashboard.html';
