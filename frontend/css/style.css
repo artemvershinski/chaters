@@ -1401,3 +1401,38 @@ body {
     border: none !important;
     box-shadow: none !important;
 }
+/* ===== КНОПКА УВЕДОМЛЕНИЙ ===== */
+.notification-button {
+    background: none;
+    border: none;
+    color: rgb(255, 255, 255);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+    border-radius: 50%;
+}
+
+.notification-button:active {
+    background: rgb(50, 50, 50);
+    transform: scale(0.95);
+    opacity: 1;
+}
+
+.notification-button.active {
+    opacity: 1;
+    color: rgb(0, 122, 255);
+}
+
+.chat-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+}
