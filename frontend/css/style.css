@@ -1405,8 +1405,7 @@ body {
 .notification-button {
     background: none;
     border: none;
-    color: rgb(255, 255, 255);
-    font-size: 22px;
+    color: rgb(140, 140, 140);
     cursor: pointer;
     padding: 0;
     width: 44px;
@@ -1415,19 +1414,33 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    opacity: 0.8;
     border-radius: 50%;
+}
+
+.notification-button svg {
+    width: 20px;
+    height: 20px;
 }
 
 .notification-button:active {
     background: rgb(50, 50, 50);
     transform: scale(0.95);
-    opacity: 1;
 }
 
 .notification-button.active {
-    opacity: 1;
     color: rgb(0, 122, 255);
+}
+
+.notification-button.active .bell-off {
+    display: none;
+}
+
+.notification-button.active .bell-on {
+    display: block;
+}
+
+.notification-button .bell-on {
+    display: none;
 }
 
 .chat-header-right {
