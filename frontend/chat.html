@@ -14,17 +14,28 @@
 </head>
 <body class="chat-body">
     <div class="chat-container">
-        <!-- Шапка чата — теперь кликабельная -->
+        <!-- ===== ШАПКА ЧАТА ===== -->
         <div class="chat-header" id="chatHeader">
-            <button class="back-button" aria-label="Назад">←</button>
-            <div class="chat-info">
-                <span class="chat-name" id="chatName">Загрузка...</span>
-                <span class="chat-members-count" id="chatMembersCount">0 участников</span>
+            <div class="chat-header-left">
+                <button class="back-button" aria-label="Назад">←</button>
+                <div class="chat-info">
+                    <span class="chat-name" id="chatName">Загрузка...</span>
+                    <span class="chat-members-count" id="chatMembersCount">0 участников</span>
+                </div>
             </div>
-            <div class="chat-header-placeholder"></div>
+            <div class="chat-header-right">
+    <button id="notificationButton" class="notification-button" aria-label="Уведомления">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="bell-off" d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.5 5 13 4 14H20C19 13 18 11.5 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path class="bell-on hidden" d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z" fill="currentColor"/>
+            <path d="M4 4L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </button>
+    <div class="chat-header-placeholder"></div>
+</div>
         </div>
 
-        <!-- Меню чата (выдвигается снизу) -->
+        <!-- ===== МЕНЮ ЧАТА (ВЫДВИГАЕТСЯ СНИЗУ) ===== -->
         <div id="chatMenu" class="chat-menu-overlay hidden">
             <div class="chat-menu">
                 <div class="chat-menu-header">
@@ -76,7 +87,7 @@
             </div>
         </div>
 
-        <!-- Редактирование названия -->
+        <!-- ===== МОДАЛКА РЕДАКТИРОВАНИЯ НАЗВАНИЯ ===== -->
         <div id="editNameModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
@@ -95,7 +106,7 @@
             </div>
         </div>
 
-        <!-- Редактирование ID -->
+        <!-- ===== МОДАЛКА РЕДАКТИРОВАНИЯ ID ===== -->
         <div id="editIdModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
@@ -115,23 +126,24 @@
             </div>
         </div>
 
-        <!-- Контейнер сообщений (перевернутый) -->
+        <!-- ===== КОНТЕЙНЕР СООБЩЕНИЙ ===== -->
         <div id="messagesContainer" class="messages-container">
             <div id="messagesLoader" class="messages-loader hidden">
                 <div class="spinner-small"></div>
             </div>
-            <!-- Сообщения будут добавляться СНИЗУ вверх -->
         </div>
 
-        <!-- Индикатор печатания -->
+        <!-- ===== ИНДИКАТОР ПЕЧАТАНИЯ ===== -->
         <div id="typingIndicator" class="typing-indicator hidden"></div>
 
-        <!-- Пустой чат -->
+        <!-- ===== ПУСТОЙ ЧАТ ===== -->
         <div id="emptyChat" class="empty-chat hidden">
             <span class="empty-icon">💬</span>
             <h3>Нет сообщений</h3>
             <p>Напишите первое сообщение</p>
         </div>
+
+        <!-- ===== ИНПУТ СООБЩЕНИЙ ===== -->
         <div class="message-input-container">
             <button id="attachButton" class="attach-button" aria-label="Прикрепить файл">+</button>
             <div class="input-wrapper" id="messageInputWrapper">
@@ -142,18 +154,14 @@
                     aria-label="Текст сообщения"
                 ></textarea>
             </div>
-            
-            <!-- Кнопка отправки (обычная) -->
             <button id="sendButton" class="send-button">→</button>
-            
-            <!-- Кнопка голосового (скрыта по умолчанию) -->
             <button id="voiceButton" class="voice-button hidden">🎤</button>
         </div>
 
         <input type="file" id="fileInput" class="hidden" accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt" aria-label="Выберите файл">
     </div>
 
-    <!-- Модалка предпросмотра изображения -->
+    <!-- ===== МОДАЛКА ПРЕДПРОСМОТРА ИЗОБРАЖЕНИЯ ===== -->
     <div id="imagePreviewModal" class="modal hidden">
         <div class="modal-content" style="background: none; border: none;">
             <img id="previewImage" src="" alt="Превью" style="max-width: 100%; max-height: 80vh; border-radius: 12px;">
