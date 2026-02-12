@@ -783,13 +783,13 @@ function initNotificationButton() {
     
     let headerRight = document.querySelector('.chat-header-right');
     if (!headerRight) {
-        console.error('❌ .chat-header-right не найден, создаём');
         const chatHeader = document.querySelector('.chat-header');
         if (chatHeader) {
             headerRight = document.createElement('div');
             headerRight.className = 'chat-header-right';
             chatHeader.appendChild(headerRight);
         } else {
+            console.error('❌ Нет .chat-header');
             return;
         }
     }
@@ -797,13 +797,27 @@ function initNotificationButton() {
     const oldBtn = document.getElementById('notificationButton');
     if (oldBtn) oldBtn.remove();
     
+    // Добавляем плейсхолдер если его нет
+    if (!headerRight.querySelector('.chat-header-placeholder')) {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'chat-header-placeholder';
+        headerRight.appendChild(placeholder);
+    }
+    
     const notifBtn = document.createElement('button');
     notifBtn.id = 'notificationButton';
     notifBtn.className = 'notification-button';
     notifBtn.setAttribute('aria-label', 'Уведомления выключены');
     notifBtn.innerHTML = '🔕';
     
-    headerRight.appendChild(notifBtn);
+    // Вставляем перед плейсхолдером
+    const placeholder = headerRight.querySelector('.chat-header-placeholder');
+    if (placeholder) {
+        headerRight.insertBefore(notifBtn, placeholder);
+    } else {
+        headerRight.appendChild(notifBtn);
+    }
+    
     console.log('✅ Кнопка уведомлений добавлена');
     
     notifBtn.addEventListener('click', (e) => {
@@ -954,6 +968,7 @@ window.kickMember = kickMember;
 window.leaveChat = leaveChat;
 window.showMembers = showMembers;
 window.showSettings = showSettings;
+window.openImagePreview = openImagePreview;
 
 function openImagePreview(url) {
     const modal = document.getElementById('imagePreviewModal');
@@ -978,7 +993,6 @@ function openImagePreview(url) {
         }
     });
 }
-window.openImagePreview = openImagePreview;
 
 function leaveChat() {
     if (!confirm('Покинуть чат?')) return;
