@@ -63,15 +63,23 @@ async function loadChatInfo() {
         currentChat = chats.find(c => c.chat_id === currentChatId);
         
         if (currentChat) {
-            document.querySelector('.chat-name').textContent = currentChat.name;
-            document.querySelector('#menuChatName').textContent = currentChat.name;
-            document.querySelector('#menuChatId').textContent = currentChat.chat_id;
-            document.querySelector('#currentChatName').textContent = currentChat.name;
-            document.querySelector('#currentChatId').textContent = currentChat.chat_id;
+            const chatNameEl = document.querySelector('.chat-name');
+            const menuChatNameEl = document.getElementById('menuChatName');
+            const menuChatIdEl = document.getElementById('menuChatId');
+            const currentChatNameEl = document.getElementById('currentChatName');
+            const currentChatIdEl = document.getElementById('currentChatId');
+            
+            if (chatNameEl) chatNameEl.textContent = currentChat.name;
+            if (menuChatNameEl) menuChatNameEl.textContent = currentChat.name;
+            if (menuChatIdEl) menuChatIdEl.textContent = currentChat.chat_id;
+            if (currentChatNameEl) currentChatNameEl.textContent = currentChat.name;
+            if (currentChatIdEl) currentChatIdEl.textContent = currentChat.chat_id;
             
             if (currentChat.created_by === currentUser?.id) {
-                document.getElementById('creatorSettings')?.classList.remove('hidden');
-                document.getElementById('deleteChatItem')?.classList.remove('hidden');
+                const creatorSettings = document.getElementById('creatorSettings');
+                const deleteChatItem = document.getElementById('deleteChatItem');
+                if (creatorSettings) creatorSettings.classList.remove('hidden');
+                if (deleteChatItem) deleteChatItem.classList.remove('hidden');
             }
         }
     } catch (error) {
@@ -302,7 +310,9 @@ function initCopyOnLongPress() {
 // ===== КОПИРОВАНИЕ В БУФЕР =====
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+        navigator.clipboard.writeText(text).catch(() => {
+            fallbackCopy(text);
+        });
     } else {
         fallbackCopy(text);
     }
@@ -323,6 +333,7 @@ function fallbackCopy(text) {
 async function deleteMessage(messageId) {
     try {
         await API.messages.delete(messageId);
+        
         const messageEl = document.querySelector(`.message[data-message-id="${messageId}"]`);
         if (messageEl) messageEl.remove();
         
@@ -333,6 +344,7 @@ async function deleteMessage(messageId) {
                 messageId: messageId
             }));
         }
+        
         API.showCheckToast('Удалено');
     } catch (error) {
         console.error('❌ Ошибка удаления:', error);
@@ -348,6 +360,7 @@ function initMessageLongPress() {
     document.addEventListener('touchstart', (e) => {
         const messageEl = e.target.closest('.message');
         if (!messageEl) return;
+        
         if (messageEl.classList.contains('own')) return;
         
         pressedMessage = messageEl;
@@ -397,6 +410,7 @@ function showDeleteConfirm(messageId) {
 async function sendMessage() {
     const input = document.getElementById('messageInput');
     const content = input.value.trim();
+    
     if (!content) return;
     
     input.value = '';
@@ -414,6 +428,7 @@ async function sendMessage() {
                 message: message
             }));
         }
+        
     } catch (error) {
         console.error('❌ Ошибка отправки:', error);
         API.showToast('Не удалось отправить сообщение', 'error');
@@ -439,6 +454,7 @@ function initWebSocket() {
     ws.onmessage = (event) => {
         try {
             const data = JSON.parse(event.data);
+            
             if (data.type === 'message' && data.message) {
                 appendMessage(data.message);
             } else if (data.type === 'message_deleted') {
@@ -481,6 +497,7 @@ function initEventListeners() {
         input.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
+            
             if (ws?.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'typing',
@@ -491,6 +508,7 @@ function initEventListeners() {
     }
     
     if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+    
     if (backBtn) {
         backBtn.addEventListener('click', () => {
             window.location.href = '/dashboard.html';
@@ -530,7 +548,9 @@ function initEventListeners() {
         editNameItem.addEventListener('click', () => {
             document.getElementById('editNameModal')?.classList.add('active');
             const input = document.getElementById('editChatNameInput');
-            if (input && currentChat) input.value = currentChat.name;
+            if (input && currentChat) {
+                input.value = currentChat.name;
+            }
         });
     }
     
@@ -539,7 +559,9 @@ function initEventListeners() {
         editIdItem.addEventListener('click', () => {
             document.getElementById('editIdModal')?.classList.add('active');
             const input = document.getElementById('editChatIdInput');
-            if (input && currentChat) input.value = currentChat.chat_id;
+            if (input && currentChat) {
+                input.value = currentChat.chat_id;
+            }
         });
     }
     
@@ -548,6 +570,7 @@ function initEventListeners() {
         saveNameBtn.addEventListener('click', async () => {
             const newName = document.getElementById('editChatNameInput')?.value.trim();
             if (!newName) return;
+            
             try {
                 await API.chats.updateSettings(currentChatId, { name: newName });
                 currentChat.name = newName;
@@ -565,8 +588,10 @@ function initEventListeners() {
         saveIdBtn.addEventListener('click', async () => {
             let newId = document.getElementById('editChatIdInput')?.value.trim();
             if (!newId) return;
+            
             if (!newId.startsWith('#')) newId = '#' + newId;
             if (newId.startsWith('##')) newId = '#' + newId.slice(2);
+            
             try {
                 await API.chats.updateSettings(currentChatId, { chatId: newId });
                 currentChat.chat_id = newId;
@@ -582,7 +607,8 @@ function initEventListeners() {
     const deleteChatItem = document.getElementById('deleteChatItem');
     if (deleteChatItem) {
         deleteChatItem.addEventListener('click', async () => {
-            if (!confirm('Удалить чат навсегда?')) return;
+            if (!confirm('Удалить чат навсегда? Это действие нельзя отменить.')) return;
+            
             try {
                 await API.chats.delete(currentChatId);
                 window.location.href = '/dashboard.html';
@@ -596,6 +622,7 @@ function initEventListeners() {
     if (leaveChatItem) {
         leaveChatItem.addEventListener('click', async () => {
             if (!confirm('Покинуть чат?')) return;
+            
             try {
                 await API.chats.leave(currentChatId);
                 window.location.href = '/dashboard.html';
@@ -613,15 +640,25 @@ function initEventListeners() {
     });
 }
 
-// ===== ФАЙЛЫ =====
+// ===== ФАЙЛЫ — С ЗАГЛУШКОЙ =====
 function initFileUpload() {
     const attachBtn = document.getElementById('attachButton');
     const fileInput = document.getElementById('fileInput');
+    
     if (!attachBtn || !fileInput) return;
     
-    attachBtn.addEventListener('click', () => fileInput.click());
+    attachBtn.addEventListener('click', () => {
+        API.showToast('📁 Загрузка файлов временно недоступна', 'info');
+        // fileInput.click(); // ЗАКОММЕНТИРОВАНО
+    });
     
     fileInput.addEventListener('change', async (e) => {
+        e.preventDefault();
+        API.showToast('📁 Загрузка файлов временно недоступна', 'info');
+        fileInput.value = '';
+        
+        // ВЕСЬ КОД НИЖЕ ЗАКОММЕНТИРОВАН
+        /*
         const file = e.target.files[0];
         if (!file) return;
         
@@ -643,10 +680,11 @@ function initFileUpload() {
         } finally {
             API.hideLoader();
         }
+        */
     });
 }
 
-// ===== ГОЛОСОВЫЕ =====
+// ===== ГОЛОСОВЫЕ — С ЗАГЛУШКОЙ =====
 function initVoiceRecording() {
     const input = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendButton');
@@ -654,6 +692,8 @@ function initVoiceRecording() {
     const wrapper = document.getElementById('messageInputWrapper');
     
     if (!input || !sendBtn || !voiceBtn || !wrapper) return;
+    
+    // Проверяем поддержку, но не используем
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         voiceBtn.style.display = 'none';
         return;
@@ -661,6 +701,7 @@ function initVoiceRecording() {
     
     input.addEventListener('input', function() {
         const isEmpty = this.value.trim() === '';
+        
         if (isEmpty) {
             sendBtn.classList.add('hidden');
             voiceBtn.classList.remove('hidden');
@@ -674,19 +715,27 @@ function initVoiceRecording() {
     
     input.dispatchEvent(new Event('input'));
     
-    voiceBtn.addEventListener('mousedown', startRecording);
-    voiceBtn.addEventListener('touchstart', (e) => {
+    // ПЕРЕОПРЕДЕЛЯЕМ ОБРАБОТЧИКИ НА ЗАГЛУШКУ
+    voiceBtn.addEventListener('mousedown', (e) => {
         e.preventDefault();
-        startRecording();
+        API.showToast('🎤 Голосовые сообщения временно недоступны', 'info');
     });
     
-    [document, voiceBtn].forEach(el => {
-        el.addEventListener('mouseup', stopRecording);
-        el.addEventListener('touchend', stopRecording);
-        el.addEventListener('touchcancel', stopRecording);
+    voiceBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        API.showToast('🎤 Голосовые сообщения временно недоступны', 'info');
     });
+    
+    // Удаляем старые обработчики если были
+    // [document, voiceBtn].forEach(el => {
+    //     el.addEventListener('mouseup', stopRecording);
+    //     el.addEventListener('touchend', stopRecording);
+    //     el.addEventListener('touchcancel', stopRecording);
+    // });
 }
 
+// ===== СТАРЫЕ ФУНКЦИИ ЗАПИСИ — ЗАКОММЕНТИРОВАНЫ =====
+/*
 async function startRecording(e) {
     if (e) e.preventDefault();
     if (isRecording) return;
@@ -741,6 +790,7 @@ function stopRecording() {
         mediaRecorder.stop();
     }
 }
+*/
 
 // ===== ИНДИКАТОР ПЕЧАТАНИЯ =====
 function showTypingIndicator(nickname) {
@@ -777,7 +827,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// ===== УВЕДОМЛЕНИЯ — КНОПКА СПРАВА =====
+// ===== УВЕДОМЛЕНИЯ — КНОПКА =====
 function initNotificationButton() {
     console.log('🔔 Инициализация кнопки уведомлений');
     
@@ -788,8 +838,11 @@ function initNotificationButton() {
             headerRight = document.createElement('div');
             headerRight.className = 'chat-header-right';
             chatHeader.appendChild(headerRight);
+            
+            const placeholder = document.createElement('div');
+            placeholder.className = 'chat-header-placeholder';
+            headerRight.appendChild(placeholder);
         } else {
-            console.error('❌ Нет .chat-header');
             return;
         }
     }
@@ -797,28 +850,24 @@ function initNotificationButton() {
     const oldBtn = document.getElementById('notificationButton');
     if (oldBtn) oldBtn.remove();
     
-    // Добавляем плейсхолдер если его нет
-    if (!headerRight.querySelector('.chat-header-placeholder')) {
-        const placeholder = document.createElement('div');
-        placeholder.className = 'chat-header-placeholder';
-        headerRight.appendChild(placeholder);
-    }
-    
     const notifBtn = document.createElement('button');
     notifBtn.id = 'notificationButton';
     notifBtn.className = 'notification-button';
     notifBtn.setAttribute('aria-label', 'Уведомления выключены');
-    notifBtn.innerHTML = '🔕';
+    notifBtn.innerHTML = `
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.5 5 13 4 14H20C19 13 18 11.5 18 8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z" fill="currentColor"/>
+            <path class="bell-off" d="M4 4L20 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+    `;
     
-    // Вставляем перед плейсхолдером
     const placeholder = headerRight.querySelector('.chat-header-placeholder');
     if (placeholder) {
         headerRight.insertBefore(notifBtn, placeholder);
     } else {
         headerRight.appendChild(notifBtn);
     }
-    
-    console.log('✅ Кнопка уведомлений добавлена');
     
     notifBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -827,21 +876,17 @@ function initNotificationButton() {
     });
 }
 
-// ===== ПРОВЕРКА СТАТУСА ПОДПИСКИ =====
+// ===== ПРОВЕРКА СТАТУСА =====
 async function checkPushStatus() {
     try {
         if (!('Notification' in window) || !('serviceWorker' in navigator)) {
             updateNotificationButton(false);
             return;
         }
-        
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
-        const isSubscribed = !!subscription;
-        
-        pushEnabled = isSubscribed;
-        updateNotificationButton(isSubscribed);
-        console.log('🔔 Статус уведомлений:', isSubscribed ? 'ВКЛ' : 'ВЫКЛ');
+        pushEnabled = !!subscription;
+        updateNotificationButton(pushEnabled);
     } catch (error) {
         console.error('❌ Ошибка проверки статуса:', error);
         updateNotificationButton(false);
@@ -851,35 +896,33 @@ async function checkPushStatus() {
 // ===== ОБНОВЛЕНИЕ КНОПКИ =====
 function updateNotificationButton(enabled) {
     const notifBtn = document.getElementById('notificationButton');
-    if (!notifBtn) {
-        console.error('❌ Кнопка уведомлений не найдена');
-        return;
-    }
+    if (!notifBtn) return;
     
+    const svg = notifBtn.querySelector('svg');
     if (enabled) {
         notifBtn.classList.add('active');
         notifBtn.setAttribute('aria-label', 'Уведомления включены');
-        notifBtn.innerHTML = '🔔';
-        console.log('🔔 Кнопка обновлена: ВКЛ');
+        if (svg) {
+            const bellOff = svg.querySelector('.bell-off');
+            if (bellOff) bellOff.style.display = 'none';
+        }
     } else {
         notifBtn.classList.remove('active');
         notifBtn.setAttribute('aria-label', 'Уведомления выключены');
-        notifBtn.innerHTML = '🔕';
-        console.log('🔕 Кнопка обновлена: ВЫКЛ');
+        if (svg) {
+            const bellOff = svg.querySelector('.bell-off');
+            if (bellOff) bellOff.style.display = 'block';
+        }
     }
 }
 
-// ===== ПЕРЕКЛЮЧЕНИЕ УВЕДОМЛЕНИЙ =====
+// ===== ПЕРЕКЛЮЧЕНИЕ =====
 async function toggleNotifications(e) {
     if (e) e.preventDefault();
-    console.log('🔔 Переключение уведомлений, текущий статус:', pushEnabled ? 'ВКЛ' : 'ВЫКЛ');
-    
     try {
         if (pushEnabled) {
-            // ОТКЛЮЧАЕМ
             const registration = await navigator.serviceWorker.ready;
             const subscription = await registration.pushManager.getSubscription();
-            
             if (subscription) {
                 await fetch('/api/push/unsubscribe', {
                     method: 'POST',
@@ -889,27 +932,18 @@ async function toggleNotifications(e) {
                 });
                 await subscription.unsubscribe();
             }
-            
             pushEnabled = false;
             updateNotificationButton(false);
             API.showCheckToast('🔕 Уведомления отключены');
-            console.log('🔕 Уведомления отключены');
-            
         } else {
-            // ВКЛЮЧАЕМ
-            console.log('🔔 Запрос разрешения...');
             const perm = await Notification.requestPermission();
-            console.log('🔔 Разрешение:', perm);
-            
             if (perm === 'granted') {
                 await subscribeToPush();
                 pushEnabled = true;
                 updateNotificationButton(true);
                 API.showCheckToast('🔔 Уведомления включены');
-                console.log('🔔 Уведомления включены');
             } else {
                 API.showToast('❌ Нет разрешения на уведомления', 'error');
-                console.error('❌ Нет разрешения');
             }
         }
     } catch (error) {
@@ -918,66 +952,55 @@ async function toggleNotifications(e) {
     }
 }
 
-// ===== ПОДПИСКА НА УВЕДОМЛЕНИЯ =====
+// ===== ПОДПИСКА =====
 async function subscribeToPush() {
-    try {
-        console.log('📨 Создание push-подписки...');
-        
-        const registration = await navigator.serviceWorker.ready;
-        const keyRes = await fetch('/api/push/vapid-public-key');
-        const { publicKey } = await keyRes.json();
-        
-        function urlBase64ToUint8Array(base64String) {
-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding)
-                .replace(/\-/g, '+')
-                .replace(/_/g, '/');
-            const rawData = window.atob(base64);
-            const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; ++i) {
-                outputArray[i] = rawData.charCodeAt(i);
-            }
-            return outputArray;
-        }
-
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(publicKey)
-        });
-
-        const response = await fetch('/api/push/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(subscription),
-            credentials: 'include'
-        });
-
-        if (!response.ok) throw new Error('Ошибка подписки');
-        
-        console.log('✅ Успешно подписались!');
-    } catch (error) {
-        console.error('❌ Ошибка подписки:', error);
-        throw error;
+    console.log('📨 Создание push-подписки...');
+    
+    const registration = await navigator.serviceWorker.ready;
+    const keyRes = await fetch('/api/push/vapid-public-key');
+    const { publicKey } = await keyRes.json();
+    
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+        return outputArray;
     }
+
+    const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+    });
+
+    const response = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription),
+        credentials: 'include'
+    });
+
+    if (!response.ok) throw new Error('Ошибка подписки');
+    console.log('✅ Успешно подписались!');
 }
 
 // ===== ГЛОБАЛЬНЫЕ ФУНКЦИИ =====
 window.sendMessage = sendMessage;
 window.deleteMessage = deleteMessage;
 window.kickMember = kickMember;
-window.leaveChat = leaveChat;
-window.showMembers = showMembers;
-window.showSettings = showSettings;
-window.openImagePreview = openImagePreview;
-
-function openImagePreview(url) {
+window.leaveChat = function() {
+    if (!confirm('Покинуть чат?')) return;
+    API.chats.leave(currentChatId).then(() => window.location.href = '/dashboard.html');
+};
+window.showMembers = () => {};
+window.showSettings = () => {};
+window.openImagePreview = (url) => {
     const modal = document.getElementById('imagePreviewModal');
     const img = document.getElementById('previewImage');
     if (!modal || !img) return;
-    
     img.src = url;
     modal.classList.add('active');
-    
     const closeBtn = modal.querySelector('.close-modal');
     if (closeBtn) {
         closeBtn.onclick = () => {
@@ -985,30 +1008,10 @@ function openImagePreview(url) {
             img.src = '';
         };
     }
-    
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.classList.remove('active');
             img.src = '';
         }
     });
-}
-
-function leaveChat() {
-    if (!confirm('Покинуть чат?')) return;
-    try {
-        API.chats.leave(currentChatId);
-        window.location.href = '/dashboard.html';
-    } catch (error) {
-        console.error('❌ Ошибка выхода из чата');
-        API.showToast('Не удалось покинуть чат', 'error');
-    }
-}
-
-function showMembers() {
-    console.log('👥 Показ участников');
-}
-
-function showSettings() {
-    console.log('⚙️ Настройки чата');
-}
+};
