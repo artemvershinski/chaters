@@ -27,7 +27,7 @@ body {
 }
 
 /* ===== КОНТЕЙНЕРЫ ===== */
-.container, .dashboard-container, .chat-container {
+.container, .dashboard-container {
     width: 100%;
     min-height: 100vh;
     max-width: 480px;
@@ -36,6 +36,18 @@ body {
     display: flex;
     flex-direction: column;
     background: rgb(30, 30, 30);
+}
+
+.chat-container {
+    width: 100%;
+    height: 100dvh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    background: rgb(32, 32, 32);
+    overflow: hidden;
 }
 
 /* ===== АНИМАЦИИ ===== */
@@ -54,9 +66,42 @@ body {
     to { transform: scale(1); opacity: 1; }
 }
 
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.95); }
+}
+
 @keyframes messageSlide {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* ===== АНИМАЦИИ ДЛЯ ВСЕХ ДИАЛОГОВ ===== */
+.modal, .chat-menu-overlay, .message-delete-overlay {
+    animation: fadeIn 0.25s ease;
+}
+
+.modal-content, .chat-menu, .delete-confirm {
+    animation: scaleIn 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+.modal.closing, .chat-menu-overlay.closing, .message-delete-overlay.closing {
+    animation: fadeOut 0.2s ease forwards;
+}
+
+.toast {
+    animation: slideIn 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1);
 }
 
 /* ===== АВТОРИЗАЦИЯ ===== */
@@ -99,6 +144,7 @@ body {
 .auth-form {
     display: none;
     width: 100%;
+    animation: fadeIn 0.3s ease;
 }
 
 .auth-form.active {
@@ -136,6 +182,7 @@ body {
     outline: none;
     border-color: rgb(255, 255, 255);
     background: rgb(45, 45, 45);
+    transform: scale(1.02);
 }
 
 .input-group input::placeholder {
@@ -149,6 +196,11 @@ body {
     transform: translateY(-50%);
     font-size: 20px;
     color: rgb(140, 140, 140);
+    transition: color 0.2s ease;
+}
+
+.input-group input:focus + .input-icon {
+    color: rgb(255, 255, 255);
 }
 
 .counter {
@@ -158,6 +210,7 @@ body {
     transform: translateY(-50%);
     color: rgb(140, 140, 140);
     font-size: 12px;
+    transition: color 0.2s ease;
 }
 
 /* ===== КНОПКИ ===== */
@@ -169,7 +222,27 @@ body {
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease;
+}
+
+.btn:active::after {
+    width: 300px;
+    height: 300px;
 }
 
 .btn-primary {
@@ -179,7 +252,7 @@ body {
 
 .btn-primary:active {
     background: rgb(240, 240, 240);
-    transform: scale(0.98);
+    transform: scale(0.97);
 }
 
 .btn-secondary {
@@ -189,7 +262,12 @@ body {
 
 .btn-secondary:active {
     background: rgb(60, 60, 60);
-    transform: scale(0.98);
+    transform: scale(0.97);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
 }
 
 /* ===== ССЫЛКИ ===== */
@@ -207,6 +285,7 @@ body {
     margin-left: 6px;
     padding: 4px 8px;
     border-radius: 100px;
+    transition: all 0.2s ease;
 }
 
 .switch-text a:active {
@@ -249,6 +328,7 @@ body {
 
 .user-nickname:active {
     background: rgb(50, 50, 50);
+    transform: scale(0.95);
 }
 
 .logout-button {
@@ -291,7 +371,7 @@ body {
     font-size: 15px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
 }
 
 .action-btn:active {
@@ -301,6 +381,11 @@ body {
 
 .action-icon {
     font-size: 18px;
+    transition: transform 0.2s ease;
+}
+
+.action-btn:active .action-icon {
+    transform: scale(1.2);
 }
 
 /* ===== СПИСОК ЧАТОВ (TG СТИЛЬ) ===== */
@@ -320,7 +405,7 @@ body {
     gap: 2px;
 }
 
-/* ===== ЭЛЕМЕНТ ЧАТА — СВЕТЛЕЕ ФОНА ===== */
+/* ===== ЭЛЕМЕНТ ЧАТА ===== */
 .chat-item {
     display: flex;
     align-items: center;
@@ -329,7 +414,7 @@ body {
     padding: 12px 16px;
     border-radius: 14px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
     position: relative;
     border: none;
     margin: 0;
@@ -337,6 +422,7 @@ body {
 
 .chat-item:active {
     background: rgb(45, 45, 45);
+    transform: scale(0.99);
 }
 
 .chat-avatar {
@@ -350,6 +436,11 @@ body {
     font-size: 24px;
     color: rgb(255, 255, 255);
     flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.chat-item:active .chat-avatar {
+    transform: scale(0.95);
 }
 
 .chat-info {
@@ -367,7 +458,7 @@ body {
     width: 100%;
 }
 
-/* ===== НАЗВАНИЕ ЧАТА — ИДЕАЛЬНО СПРАВА ОТ АВАТАРКИ ===== */
+/* ===== НАЗВАНИЕ ЧАТА ===== */
 .chat-name {
     font-size: 17px;
     font-weight: 600;
@@ -384,7 +475,6 @@ body {
     line-height: 1.2;
 }
 
-/* Убираем любые обводки, бордеры, тени */
 .chat-name:focus, 
 .chat-name:hover,
 .chat-item:focus,
@@ -422,6 +512,7 @@ body {
     font-weight: 600;
     min-width: 24px;
     text-align: center;
+    animation: scaleIn 0.2s ease;
 }
 
 /* ===== ПУСТОЙ ЧАТ ===== */
@@ -461,6 +552,7 @@ body {
     z-index: 3000;
     box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     transform: translate(-50%, -50%);
+    animation: scaleIn 0.2s ease;
 }
 
 .context-menu-item {
@@ -477,6 +569,7 @@ body {
 
 .context-menu-item:active {
     background: rgb(50, 50, 50);
+    transform: scale(0.98);
 }
 
 .context-menu-item.danger {
@@ -488,53 +581,84 @@ body {
     color: white;
 }
 
-/* ===== ЧАТ ===== */
+/* ===== ЧАТ — ШАПКА С ОСТРОВКАМИ ===== */
 .chat-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
-    margin: -20px -16px 16px -16px;
+    justify-content: space-between;
+    padding: 8px 16px !important;
+    margin: 0 0 16px 0 !important;
+    background: rgb(38,38,38) !important;
+    border-bottom: 1px solid rgb(45, 45, 45);
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: all 0.2s ease;
+    border-radius: 100px;
+    width: 100%;
+}
+
+.chat-header:active {
+    background: rgb(45, 45, 45);
 }
 
 .chat-header-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     flex: 1;
+    height: 100%;
 }
 
+/* ===== КНОПКА НАЗАД — ИДЕАЛЬНО ПО ЦЕНТРУ ===== */
 .back-button {
     background: none;
     border: none;
     color: rgb(255, 255, 255);
-    font-size: 24px;
+    font-size: 32px;
+    font-weight: 300;
     cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
+    padding: 0;
+    border-radius: 100px;
     width: 44px;
     height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
+    line-height: 1;
+    letter-spacing: -3px;
+    transform: translateY(0);
+    margin: 0;
+    transition: all 0.2s ease;
 }
 
 .back-button:active {
     background: rgb(50, 50, 50);
+    transform: scale(0.95);
 }
 
+/* ===== ЦЕНТР — ОСТРОВОК С НАЗВАНИЕМ ===== */
 .chat-header .chat-info {
-    flex: 1;
+    flex: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    background: rgb(30, 30, 30);
+    padding: 6px 20px;
+    border-radius: 100px;
+    margin: 0 auto;
+    min-width: 180px;
+    text-align: center;
+    height: 44px;
+    transition: all 0.2s ease;
 }
 
-/* ФИКС — ТОЛЬКО ДЛЯ ШАПКИ ЧАТА */
+.chat-header:active .chat-info {
+    background: rgb(35, 35, 35);
+}
+
+/* ===== НАЗВАНИЕ ЧАТА В ШАПКЕ ===== */
 .chat-header .chat-name {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
     color: rgb(255, 255, 255);
     background: none;
@@ -544,29 +668,48 @@ body {
     padding: 0;
     margin: 0;
     text-decoration: none;
+    line-height: 1.2;
+    text-align: center;
+    max-width: 100%;
 }
 
+/* ===== КОЛИЧЕСТВО УЧАСТНИКОВ ===== */
 .chat-members-count {
-    font-size: 13px;
-    color: rgb(140, 140, 140);
+    font-size: 11px;
+    color: rgb(160, 160, 160);
     margin-top: 2px;
+    text-align: center;
+    line-height: 1.2;
 }
 
+/* ===== ПРАВАЯ ПУСТАЯ ЧАСТЬ ===== */
 .chat-header-placeholder {
     width: 44px;
     height: 44px;
+    opacity: 0;
+    flex-shrink: 0;
 }
 
 /* ===== СООБЩЕНИЯ ===== */
 .messages-container {
-    flex: 1;
+    flex: 1 1 0;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 6px;
     padding: 16px 0;
     min-height: 0;
+    height: 0;
     scroll-behavior: smooth;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.messages-container::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
 }
 
 .message {
@@ -576,7 +719,11 @@ body {
     position: relative;
     word-wrap: break-word;
     animation: messageSlide 0.2s ease;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+.message:active {
+    transform: scale(0.98);
 }
 
 .message.own {
@@ -628,11 +775,88 @@ body {
     color: rgb(255, 255, 255);
 }
 
+.message-copied {
+    background: rgb(60, 60, 60) !important;
+    transition: background 0.2s ease;
+}
+
+/* ===== УДАЛЕНИЕ СООБЩЕНИЙ ===== */
+.message-delete-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(30, 30, 30, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4000;
+    backdrop-filter: blur(4px);
+}
+
+.delete-confirm {
+    background: rgb(40, 40, 40);
+    border: 1px solid rgb(200, 60, 60);
+    border-radius: 24px;
+    padding: 24px;
+    width: 280px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.delete-confirm p {
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.delete-confirm-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.delete-confirm-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+    border: none;
+}
+
+.delete-confirm-btn.cancel {
+    background: rgb(50, 50, 50);
+    color: rgb(255, 255, 255);
+}
+
+.delete-confirm-btn.cancel:active {
+    background: rgb(60, 60, 60);
+    transform: scale(0.97);
+}
+
+.delete-confirm-btn.delete {
+    background: rgb(200, 60, 60);
+    color: white;
+}
+
+.delete-confirm-btn.delete:active {
+    background: rgb(220, 80, 80);
+    transform: scale(0.97);
+}
+
 /* ===== ФАЙЛЫ ===== */
 .message-image img {
     max-width: 100%;
     border-radius: 12px;
     margin-bottom: 4px;
+    transition: transform 0.2s ease;
+}
+
+.message-image img:active {
+    transform: scale(0.98);
 }
 
 .message-audio audio {
@@ -644,6 +868,11 @@ body {
     background: rgba(255,255,255,0.05);
     border-radius: 12px;
     padding: 10px;
+    transition: all 0.2s ease;
+}
+
+.message-file:active {
+    background: rgba(255,255,255,0.08);
 }
 
 .file-link {
@@ -661,7 +890,7 @@ body {
     gap: 8px;
     padding-top: 16px;
     border-top: 1px solid rgb(50, 50, 50);
-    background: rgb(30, 30, 30);
+    background: rgb(32, 32, 32);
 }
 
 .attach-button {
@@ -676,13 +905,13 @@ body {
     color: rgb(255, 255, 255);
     font-size: 24px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
     flex-shrink: 0;
 }
 
 .attach-button:active {
     background: rgb(50, 50, 50);
-    transform: scale(0.95);
+    transform: scale(0.92);
 }
 
 .input-wrapper {
@@ -699,6 +928,8 @@ body {
 
 .input-wrapper:focus-within {
     border-color: rgb(255, 255, 255);
+    background: rgb(45, 45, 45);
+    transform: scale(1.01);
 }
 
 #messageInput {
@@ -729,13 +960,13 @@ body {
     color: rgb(255, 255, 255);
     font-size: 20px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
     flex-shrink: 0;
 }
 
 .send-button:active, .voice-button:active {
     background: rgb(50, 50, 50);
-    transform: scale(0.95);
+    transform: scale(0.92);
 }
 
 .voice-button.recording {
@@ -747,18 +978,13 @@ body {
     display: none !important;
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
 /* ===== ТИПИНГ ===== */
 .typing-indicator {
     font-size: 12px;
     color: rgb(140, 140, 140);
     padding: 4px 16px;
     font-style: italic;
+    animation: fadeIn 0.2s ease;
 }
 
 .typing-indicator.hidden {
@@ -770,6 +996,7 @@ body {
     text-align: center;
     padding: 48px 20px;
     color: rgb(140, 140, 140);
+    animation: fadeIn 0.4s ease;
 }
 
 .empty-icon {
@@ -799,6 +1026,7 @@ body {
     justify-content: center;
     padding: 20px;
     z-index: 2000;
+    backdrop-filter: blur(4px);
 }
 
 .modal.active {
@@ -807,10 +1035,11 @@ body {
 
 .modal-content {
     background: rgb(40, 40, 40);
-    border-radius: 20px;
+    border-radius: 24px;
     width: 100%;
     max-width: 400px;
     border: 1px solid rgb(50, 50, 50);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
 
 .modal-header {
@@ -833,6 +1062,15 @@ body {
     color: rgb(140, 140, 140);
     font-size: 24px;
     cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.close:active {
+    background: rgb(50, 50, 50);
+    color: rgb(255, 255, 255);
+    transform: rotate(90deg);
 }
 
 .modal-body {
@@ -857,6 +1095,7 @@ body {
     z-index: 2000;
     display: flex;
     align-items: flex-end;
+    backdrop-filter: blur(4px);
 }
 
 .chat-menu-overlay.hidden {
@@ -873,6 +1112,7 @@ body {
     border-top: 1px solid rgb(50, 50, 50);
     max-height: 80vh;
     overflow-y: auto;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
 }
 
 .chat-menu-header {
@@ -907,6 +1147,15 @@ body {
     color: rgb(140, 140, 140);
     font-size: 24px;
     cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.close-menu:active {
+    background: rgb(50, 50, 50);
+    color: rgb(255, 255, 255);
+    transform: rotate(90deg);
 }
 
 .menu-section {
@@ -934,11 +1183,12 @@ body {
     border-radius: 14px;
     margin-bottom: 8px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
 }
 
 .menu-item:active {
     background: rgb(60, 60, 60);
+    transform: scale(0.98);
 }
 
 .menu-item.danger {
@@ -972,6 +1222,7 @@ body {
     padding: 10px 12px;
     background: rgb(50, 50, 50);
     border-radius: 14px;
+    transition: all 0.2s ease;
 }
 
 .member-avatar {
@@ -1017,6 +1268,7 @@ body {
 .member-kick:active {
     background: rgb(200, 60, 60);
     color: white;
+    transform: scale(0.95);
 }
 
 /* ===== ТОСТ ===== */
@@ -1035,8 +1287,8 @@ body {
     z-index: 5000;
     max-width: 480px;
     margin: 0 auto;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
 }
 
 .toast.hidden {
@@ -1069,6 +1321,7 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 6000;
+    backdrop-filter: blur(4px);
 }
 
 .loader.hidden {
@@ -1124,17 +1377,23 @@ body {
         padding-left: max(20px, env(safe-area-inset-left));
         padding-right: max(20px, env(safe-area-inset-right));
     }
+    
+    .toast {
+        bottom: max(20px, env(safe-area-inset-bottom));
+    }
 }
-.chat-name,
+
+/* ===== ПОЛНОЕ УБРАНСТВО ОБВОДОК ===== */
+/* .chat-name,
 .chat-header .chat-name,
 .chat-info .chat-name,
 .chat-item .chat-name {
-    outline: none !important;
+    outline: none !important;    РАСКОМЕНТИРОВАТЬ ЕСЛИ НЕООБХОДИМО
     border: none !important;
     box-shadow: none !important;
     text-decoration: none !important;
     background: none !important;
-}
+} */
 
 .chat-item:focus,
 .chat-item:focus-within,
@@ -1143,28 +1402,4 @@ body {
     outline: none !important;
     border: none !important;
     box-shadow: none !important;
-}
-
-.chat-container {
-    width: 100%;
-    height: 100vh;  /* ВЫСОТА = ВЕСЬ ЭКРАН */
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 20px 16px;
-    display: flex;
-    flex-direction: column;
-    background: rgb(30, 30, 30);
-    overflow: hidden;  /* НИКАКОГО СКРОЛЛА У КОНТЕЙНЕРА */
-}
-
-.messages-container {
-    flex: 1 1 0;  /* РАСТЯГИВАЙСЯ, СУКА! */
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 16px 0;
-    min-height: 0;
-    height: 0;  /* ПРИНУДИТЕЛЬНО */
-    scroll-behavior: smooth;
 }
