@@ -10,32 +10,31 @@
     
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 </head>
 <body class="chat-body">
     <div class="chat-container">
-        <!-- ===== ШАПКА ЧАТА ===== -->
+        <!-- ===== ШАПКА ЧАТА — ТОЛЬКО ABSOLUTE ===== -->
         <div class="chat-header" id="chatHeader">
-            <div class="chat-header-left">
-                <button class="back-button" aria-label="Назад">←</button>
-                <div class="chat-info">
-                    <span class="chat-name" id="chatName">Загрузка...</span>
-                    <span class="chat-members-count" id="chatMembersCount">0 участников</span>
-                </div>
+            <!-- СТРЕЛКА — ЖЁСТКО СЛЕВА -->
+            <button class="back-button" aria-label="Назад">←</button>
+            
+            <!-- НАЗВАНИЕ — ЖЁСТКО ПО ЦЕНТРУ -->
+            <div class="chat-info">
+                <span class="chat-name" id="chatName">Загрузка...</span>
+                <span class="chat-members-count" id="chatMembersCount">0 участников</span>
             </div>
-            <div class="chat-header-right">
-    <button id="notificationButton" class="notification-button" aria-label="Уведомления">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path class="bell-off" d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.5 5 13 4 14H20C19 13 18 11.5 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path class="bell-on hidden" d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z" fill="currentColor"/>
-            <path d="M4 4L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-    </button>
-    <div class="chat-header-placeholder"></div>
-</div>
+            
+            <!-- КОЛОКОЛЬЧИК — ЖЁСТКО СПРАВА -->
+            <button id="notificationButton" class="notification-button" aria-label="Уведомления выключены">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.5 5 13 4 14H20C19 13 18 11.5 18 8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22Z" fill="currentColor"/>
+                    <path class="bell-off" d="M4 4L20 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+            </button>
         </div>
 
-        <!-- ===== МЕНЮ ЧАТА (ВЫДВИГАЕТСЯ СНИЗУ) ===== -->
+        <!-- ===== МЕНЮ ЧАТА ===== -->
         <div id="chatMenu" class="chat-menu-overlay hidden">
             <div class="chat-menu">
                 <div class="chat-menu-header">
@@ -44,16 +43,13 @@
                     <button class="close-menu">×</button>
                 </div>
 
-                <!-- Настройки чата (только для создателя) -->
                 <div id="creatorSettings" class="menu-section hidden">
                     <div class="menu-section-title">Настройки чата</div>
-                    
                     <div class="menu-item edit-item" id="editChatNameItem">
                         <span class="menu-item-label">Название</span>
                         <span id="currentChatName" class="menu-item-value">Название</span>
                         <span class="menu-item-action">✎</span>
                     </div>
-                    
                     <div class="menu-item edit-item" id="editChatIdItem">
                         <span class="menu-item-label">ID чата</span>
                         <span id="currentChatId" class="menu-item-value">#чат</span>
@@ -61,22 +57,18 @@
                     </div>
                 </div>
 
-                <!-- Управление чатом -->
                 <div class="menu-section">
                     <div class="menu-section-title">Управление</div>
-                    
                     <div id="deleteChatItem" class="menu-item danger hidden">
                         <span class="menu-item-label">Удалить чат</span>
                         <span class="menu-item-action">🗑️</span>
                     </div>
-                    
                     <div id="leaveChatItem" class="menu-item danger">
                         <span class="menu-item-label">Выйти из чата</span>
                         <span class="menu-item-action">🚪</span>
                     </div>
                 </div>
 
-                <!-- Участники -->
                 <div class="menu-section">
                     <div class="menu-section-title">
                         Участники
@@ -87,7 +79,7 @@
             </div>
         </div>
 
-        <!-- ===== МОДАЛКА РЕДАКТИРОВАНИЯ НАЗВАНИЯ ===== -->
+        <!-- ===== МОДАЛКИ ===== -->
         <div id="editNameModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
@@ -106,7 +98,6 @@
             </div>
         </div>
 
-        <!-- ===== МОДАЛКА РЕДАКТИРОВАНИЯ ID ===== -->
         <div id="editIdModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
@@ -126,33 +117,26 @@
             </div>
         </div>
 
-        <!-- ===== КОНТЕЙНЕР СООБЩЕНИЙ ===== -->
+        <!-- ===== СООБЩЕНИЯ ===== -->
         <div id="messagesContainer" class="messages-container">
             <div id="messagesLoader" class="messages-loader hidden">
                 <div class="spinner-small"></div>
             </div>
         </div>
 
-        <!-- ===== ИНДИКАТОР ПЕЧАТАНИЯ ===== -->
         <div id="typingIndicator" class="typing-indicator hidden"></div>
 
-        <!-- ===== ПУСТОЙ ЧАТ ===== -->
         <div id="emptyChat" class="empty-chat hidden">
             <span class="empty-icon">💬</span>
             <h3>Нет сообщений</h3>
             <p>Напишите первое сообщение</p>
         </div>
 
-        <!-- ===== ИНПУТ СООБЩЕНИЙ ===== -->
+        <!-- ===== ИНПУТ ===== -->
         <div class="message-input-container">
             <button id="attachButton" class="attach-button" aria-label="Прикрепить файл">+</button>
             <div class="input-wrapper" id="messageInputWrapper">
-                <textarea 
-                    id="messageInput" 
-                    placeholder="Сообщение" 
-                    rows="1"
-                    aria-label="Текст сообщения"
-                ></textarea>
+                <textarea id="messageInput" placeholder="Сообщение" rows="1" aria-label="Текст сообщения"></textarea>
             </div>
             <button id="sendButton" class="send-button">→</button>
             <button id="voiceButton" class="voice-button hidden">🎤</button>
@@ -161,7 +145,7 @@
         <input type="file" id="fileInput" class="hidden" accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt" aria-label="Выберите файл">
     </div>
 
-    <!-- ===== МОДАЛКА ПРЕДПРОСМОТРА ИЗОБРАЖЕНИЯ ===== -->
+    <!-- ===== ПРЕДПРОСМОТР ===== -->
     <div id="imagePreviewModal" class="modal hidden">
         <div class="modal-content" style="background: none; border: none;">
             <img id="previewImage" src="" alt="Превью" style="max-width: 100%; max-height: 80vh; border-radius: 12px;">
