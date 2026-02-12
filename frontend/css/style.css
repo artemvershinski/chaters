@@ -1460,3 +1460,63 @@ body {
 .closing {
     pointer-events: none;
 }
+/* ===== ПОЛНОЭКРАННОЕ УВЕДОМЛЕНИЕ ===== */
+.fullscreen-notification {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.2s ease;
+}
+
+.fullscreen-notification .notification-content {
+    background: rgb(40,40,40);
+    border-radius: 24px;
+    padding: 32px;
+    max-width: 320px;
+    width: 90%;
+    text-align: center;
+    border: 1px solid rgb(50,50,50);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+    animation: scaleIn 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+}
+
+.fullscreen-notification.success .notification-content {
+    border-color: rgb(0,122,255);
+}
+
+.fullscreen-notification.error .notification-content {
+    border-color: rgb(255,69,58);
+}
+
+.fullscreen-notification .notification-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.fullscreen-notification .notification-title {
+    font-size: 24px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 8px;
+    color: rgb(255,255,255);
+}
+
+.fullscreen-notification .notification-message {
+    font-size: 16px;
+    color: rgb(160,160,160);
+    display: block;
+    line-height: 1.5;
+}
+
+.fullscreen-notification.fade-out {
+    animation: fadeOut 0.3s ease forwards;
+}
