@@ -216,9 +216,9 @@ services:
   
 | | |
 |---|-----|
-| **Капитан** | [Артём Вершинский](https://github.com/artemvershinski) |
-| **Главный инженер** | AV |
-| **Тестировщик** | Ты, читающий этот README |
+| **Капитан** | [Артём В.](https://github.com/artemvershinski) |
+| **Главный инженер** |  [Артём В.](https://github.com/artemvershinski)  |
+| **Тестировщик** |  [Артём B.](https://github.com/artemvershinski)  |
 | **Вдохновитель** | Космос |
 
 </div>
