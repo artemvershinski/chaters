@@ -15,7 +15,6 @@
 
   <br>
   
-  <img src="https://raw.githubusercontent.com/artemvershinski/chaters/main/frontend/assets/logo.png" width="120" style="border-radius: 30px;">
   
   <br>
   <br>
